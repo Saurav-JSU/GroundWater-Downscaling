@@ -12,9 +12,11 @@ import argparse
 def visualize_monthly_groundwater(input_file="results/groundwater_storage_anomalies.nc", 
                                 output_dir="figures/monthly_groundwater",
                                 start_month=None, end_month=None, 
-                                create_gif=True):
+                                create_gif=True,
+                                lower_percentile=10,
+                                upper_percentile=90):
     """
-    Visualize monthly groundwater storage anomalies.
+    Visualize monthly groundwater storage anomalies with percentile-based color scaling.
     
     Parameters:
     -----------
@@ -28,6 +30,10 @@ def visualize_monthly_groundwater(input_file="results/groundwater_storage_anomal
         End month in YYYY-MM format (e.g., "2022-12")
     create_gif : bool
         Whether to create an animated GIF of the monthly maps
+    lower_percentile : int
+        Lower percentile bound for color scaling (default: 10%)
+    upper_percentile : int
+        Upper percentile bound for color scaling (default: 90%)
     """
     # Create output directory
     output_path = Path(output_dir)
@@ -47,12 +53,21 @@ def visualize_monthly_groundwater(input_file="results/groundwater_storage_anomal
     print(f"Lat range: {ds.lat.min().values} to {ds.lat.max().values}")
     print(f"Lon range: {ds.lon.min().values} to {ds.lon.max().values}")
     
-    # Get global min/max for consistent colormap
+    # Get global min/max for reference
     gw_min = ds.groundwater.min().values
     gw_max = ds.groundwater.max().values
-    abs_max = max(abs(gw_min), abs(gw_max))
-    
     print(f"Groundwater anomaly range: {gw_min:.2f} to {gw_max:.2f} cm")
+    
+    # Get percentile-based bounds for better visualization
+    gw_lower = np.nanpercentile(ds.groundwater.values, lower_percentile)
+    gw_upper = np.nanpercentile(ds.groundwater.values, upper_percentile)
+    print(f"Using {lower_percentile}th to {upper_percentile}th percentile range: {gw_lower:.2f} to {gw_upper:.2f} cm")
+    
+    # Set color mapping bounds based on percentiles
+    if abs(gw_lower) > abs(gw_upper):
+        abs_bound = abs(gw_lower)
+    else:
+        abs_bound = abs(gw_upper)
     
     # Filter time range if specified
     if start_month is not None:
@@ -65,14 +80,17 @@ def visualize_monthly_groundwater(input_file="results/groundwater_storage_anomal
     filenames = []
     
     for i, time in enumerate(tqdm(ds.time.values)):
-        # Create a diverging colormap centered at zero
-        norm = TwoSlopeNorm(vmin=-abs_max, vcenter=0, vmax=abs_max-600)
+        # Create a diverging colormap centered at zero with percentile-based bounds
+        norm = TwoSlopeNorm(vmin=-abs_bound, vcenter=0, vmax=abs_bound)
         
         # Create a figure with state boundaries
         fig, ax = plt.subplots(figsize=(10, 8), subplot_kw={'projection': ccrs.PlateCarree()})
         
+        # Get current month's data
+        current_data = ds.groundwater.sel(time=time)
+        
         # Plot groundwater anomaly
-        im = ax.pcolormesh(ds.lon, ds.lat, ds.groundwater.sel(time=time), 
+        im = ax.pcolormesh(ds.lon, ds.lat, current_data, 
                         cmap='RdBu_r', norm=norm, transform=ccrs.PlateCarree())
         
         # Add state boundaries and coastline
@@ -85,7 +103,9 @@ def visualize_monthly_groundwater(input_file="results/groundwater_storage_anomal
         
         # Add title with formatted date
         month_str = str(time).split('T')[0]  # Handle different time formats
-        plt.title(f'Groundwater Storage Anomaly - {month_str}')
+        
+        # Add percentile info to the title
+        plt.title(f'Groundwater Storage Anomaly - {month_str}\n(Color scale: {lower_percentile}th to {upper_percentile}th percentile)')
         
         # Save figure
         filename = output_path / f'groundwater_{month_str}.png'
@@ -115,9 +135,9 @@ def visualize_monthly_groundwater(input_file="results/groundwater_storage_anomal
     print(f"\nAll maps saved to {output_path}")
     
     # Also create a 4-panel summary figure showing different time periods
-    create_summary_figure(ds, output_path)
+    create_summary_figure(ds, output_path, abs_bound, lower_percentile, upper_percentile)
 
-def create_summary_figure(ds, output_path):
+def create_summary_figure(ds, output_path, abs_bound, lower_percentile, upper_percentile):
     """Create a 4-panel summary figure showing different time periods"""
     # Calculate time indices for equal spacing through the dataset
     times = ds.time.values
@@ -131,11 +151,8 @@ def create_summary_figure(ds, output_path):
     indices = [0, n_times // 3, 2 * n_times // 3, n_times - 1]
     selected_times = [times[i] for i in indices]
     
-    # Calculate global min/max for consistent colormap
-    gw_min = ds.groundwater.min().values
-    gw_max = ds.groundwater.max().values
-    abs_max = max(abs(gw_min), abs(gw_max))
-    norm = TwoSlopeNorm(vmin=-abs_max, vcenter=0, vmax=abs_max)
+    # Create norm using the percentile-based bounds
+    norm = TwoSlopeNorm(vmin=-abs_bound, vcenter=0, vmax=abs_bound)
     
     # Create figure with 4 panels
     fig, axs = plt.subplots(2, 2, figsize=(16, 12), 
@@ -162,8 +179,8 @@ def create_summary_figure(ds, output_path):
     cbar = fig.colorbar(im, cax=cbar_ax, orientation='horizontal')
     cbar.set_label('Groundwater Storage Anomaly (cm)')
     
-    # Add overall title
-    fig.suptitle('Groundwater Storage Anomalies - Quarterly View', fontsize=16)
+    # Add overall title with percentile information
+    fig.suptitle(f'Groundwater Storage Anomalies - Quarterly View\n(Color scale: {lower_percentile}th to {upper_percentile}th percentile)', fontsize=16)
     
     # Adjust layout and save
     plt.tight_layout(rect=[0, 0.07, 1, 0.95])
@@ -181,6 +198,10 @@ if __name__ == "__main__":
     parser.add_argument('--start', default=None, help='Start month (YYYY-MM format)')
     parser.add_argument('--end', default=None, help='End month (YYYY-MM format)')
     parser.add_argument('--no-gif', action='store_true', help='Skip creating animated GIF')
+    parser.add_argument('--lower-percentile', type=int, default=10, 
+                        help='Lower percentile bound for color scaling (default: 10)')
+    parser.add_argument('--upper-percentile', type=int, default=90, 
+                        help='Upper percentile bound for color scaling (default: 90)')
     
     args = parser.parse_args()
     
@@ -189,5 +210,7 @@ if __name__ == "__main__":
         output_dir=args.output,
         start_month=args.start,
         end_month=args.end,
-        create_gif=not args.no_gif
+        create_gif=not args.no_gif,
+        lower_percentile=args.lower_percentile,
+        upper_percentile=args.upper_percentile
     )

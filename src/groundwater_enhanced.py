@@ -1,4 +1,4 @@
-# src/nan_fixing_groundwater.py
+# src/groundwater_enhanced.py - Modified for the enhanced model
 import os
 import numpy as np
 import xarray as xr
@@ -7,44 +7,90 @@ from tqdm import tqdm
 import rioxarray as rxr
 from pathlib import Path
 import pandas as pd
+from datetime import datetime
 
-def prepare_model_input(ds, time_index):
-    """Prepare input for RF model prediction matching the original training format"""
-    # Extract the features for this time step
-    features = ds.sel(time=time_index).features.values
+def prepare_model_input(ds, time_index, lag_months=[1, 3, 6]):
+    """
+    Prepare enhanced input for RF model prediction with lagged and seasonal features.
     
-    # Get dimensions
-    n_features = features.shape[0]
-    n_lat = ds.lat.shape[0]
-    n_lon = ds.lon.shape[0]
-    
-    # Reshape to match model's expected format
-    # This follows the format in model_rf.py that was used for training
-    X_reshaped = features.reshape(n_features, -1).T
-    
-    # Add static features if available
-    if 'static_features' in ds:
-        static_features = ds.static_features.values
-        n_static = static_features.shape[0]
+    Parameters:
+    -----------
+    ds : xarray.Dataset
+        Dataset containing features
+    time_index : str or datetime
+        Time index to prepare features for
+    lag_months : list
+        List of lag periods to include
         
-        # Reshape static features
-        static_reshaped = static_features.reshape(n_static, -1).T
+    Returns:
+    --------
+    numpy.ndarray
+        Prepared input array ready for model prediction
+    """
+    # Extract features for target time
+    try:
+        target_features = ds.sel(time=time_index).features.values
+        feature_shape = target_features.shape
+        spatial_shape = feature_shape[1:]  # (lat, lon)
         
-        # Create repeated static features for each pixel
-        X_combined = np.hstack([X_reshaped, static_reshaped])
-        return X_combined
+        # Add current features
+        all_features = [target_features]
+        
+        # Try to add lagged features
+        for lag in lag_months:
+            try:
+                # Calculate lagged date
+                target_date = pd.to_datetime(time_index)
+                year, month = target_date.year, target_date.month
+                
+                lag_month = month - lag
+                lag_year = year
+                while lag_month <= 0:
+                    lag_month += 12
+                    lag_year -= 1
+                
+                lagged_date = f"{lag_year:04d}-{lag_month:02d}"
+                
+                # Try to get data for lagged date
+                lagged_feature = ds.sel(time=lagged_date).features.values
+                all_features.append(lagged_feature)
+            except KeyError:
+                # If lagged date not available, use zeros
+                all_features.append(np.zeros_like(target_features))
+        
+        # Create seasonal features (sin/cos encoding of month)
+        month = pd.to_datetime(time_index).month
+        month_sin = np.sin(2 * np.pi * month / 12) * np.ones(spatial_shape)
+        month_cos = np.cos(2 * np.pi * month / 12) * np.ones(spatial_shape)
+        
+        all_features.append(month_sin[np.newaxis, :, :])
+        all_features.append(month_cos[np.newaxis, :, :])
+        
+        # Add static features if available
+        if 'static_features' in ds:
+            static_features = ds.static_features.values
+            all_features.append(static_features)
+        
+        # Convert to single array and reshape for model input
+        X = np.vstack(all_features)
+        X_flat = X.reshape(X.shape[0], -1).T
+        
+        return X_flat
     
-    return X_reshaped
+    except Exception as e:
+        print(f"Error preparing input for {time_index}: {e}")
+        return None
 
 def calculate_groundwater_storage():
-    """Calculate groundwater storage anomalies from TWS and other components"""
+    """Calculate groundwater storage anomalies from TWS and other components using enhanced model"""
     # Create output directory
     os.makedirs("results", exist_ok=True)
     
     # Load data
-    print("Loading feature stack and model...")
+    print("Loading feature stack and enhanced model...")
     ds = xr.open_dataset("data/processed/feature_stack.nc")
     model = joblib.load("models/rf_model_enhanced.joblib")
+    print(f"Model expects {model.n_features_in_} features as input")
     
     # Define GRACE reference period (2004-2009)
     reference_start = "2004-01"
@@ -200,19 +246,18 @@ def calculate_groundwater_storage():
     # Process only valid times
     for i, time_index in enumerate(tqdm(valid_times)):
         try:
-            # Prepare model input for TWS prediction
-            X = prepare_model_input(ds, time_index)
+            # Prepare enhanced model input for TWS prediction
+            X = prepare_model_input(ds, time_index, lag_months=[1, 3, 6])
+            
+            # Skip if input preparation failed
+            if X is None:
+                print(f"⚠️ Skipping {time_index}: Could not prepare model input")
+                continue
             
             # Verify dimensions match what model expects
             if X.shape[1] != model.n_features_in_:
                 print(f"⚠️ Feature count mismatch: have {X.shape[1]}, need {model.n_features_in_}")
-                
-                # Try alternative approach if needed
-                if 'static_features' in ds:
-                    print("Trying alternative feature preparation approach...")
-                    features_temp = ds.sel(time=time_index).features.values
-                    static_temp = ds.static_features.values
-                    X = np.column_stack([features_temp.flatten(), static_temp.flatten()])
+                continue
                 
             # Calculate predicted TWS anomaly
             tws_pred = model.predict(X)
@@ -263,16 +308,17 @@ def calculate_groundwater_storage():
         attrs={
             "reference_period": f"{reference_start} to {reference_end}",
             "description": f"Water storage anomalies relative to {reference_start}-{reference_end} mean",
-            "processing_notes": "NaN values in soil moisture and SWE were replaced with zeros during calculation"
+            "processing_notes": "Enhanced model with lagged and seasonal features",
+            "model_info": "Random Forest with lagged features and seasonal encoding"
         }
     )
     
     # Add metadata
-    gws_ds.groundwater.attrs["long_name"] = "Groundwater Storage Anomaly"
+    gws_ds.groundwater.attrs["long_name"] = "Groundwater Storage Anomaly (Enhanced Model)"
     gws_ds.groundwater.attrs["units"] = "cm water equivalent"
     gws_ds.groundwater.attrs["reference_period"] = f"{reference_start} to {reference_end}"
     
-    gws_ds.tws.attrs["long_name"] = "Total Water Storage Anomaly"
+    gws_ds.tws.attrs["long_name"] = "Total Water Storage Anomaly (Enhanced Model)"
     gws_ds.tws.attrs["units"] = "cm water equivalent"
     gws_ds.tws.attrs["reference_period"] = f"{reference_start} to {reference_end}"
     
@@ -285,9 +331,9 @@ def calculate_groundwater_storage():
     gws_ds.swe_anomaly.attrs["reference_period"] = f"{reference_start} to {reference_end}"
     
     # Save results
-    output_path = "results/groundwater_storage_anomalies.nc"
+    output_path = "results/groundwater_storage_anomalies_enhanced.nc"
     gws_ds.to_netcdf(output_path)
-    print(f"✅ Groundwater storage anomalies saved to {output_path}")
+    print(f"✅ Enhanced groundwater storage anomalies saved to {output_path}")
     print(f"   All anomalies are relative to the {reference_start} to {reference_end} reference period")
     
     return gws_ds
