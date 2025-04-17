@@ -1,0 +1,508 @@
+==== DATA CHECK SUMMARY ====
+Generated on: 2025-04-13 16:25:56.714238
+
+--- GRACE ---
+  Total GeoTIFF files: 208
+    Sample 1: 20121130_20121230.tif
+      Shape: (49, 41)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.04993971336259, bottom=27.56708775369326, right=-81.6344763889124, top=49.575812214621536)
+      Resolution: (0.4491576420597607, 0.4491576420597607)
+      CRS: EPSG:4326
+    Sample 2: 20031231_20040112.tif
+      Shape: (49, 41)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.04993971336259, bottom=27.56708775369326, right=-81.6344763889124, top=49.575812214621536)
+      Resolution: (0.4491576420597607, 0.4491576420597607)
+      CRS: EPSG:4326
+    Sample 3: 20181021_20181108.tif
+      Shape: (49, 41)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.04993971336259, bottom=27.56708775369326, right=-81.6344763889124, top=49.575812214621536)
+      Resolution: (0.4491576420597607, 0.4491576420597607)
+      CRS: EPSG:4326
+    Sample 4: 20221130_20221230.tif
+      Shape: (49, 41)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.04993971336259, bottom=27.56708775369326, right=-81.6344763889124, top=49.575812214621536)
+      Resolution: (0.4491576420597607, 0.4491576420597607)
+      CRS: EPSG:4326
+    Sample 5: 20101130_20101226.tif
+      Shape: (49, 41)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.04993971336259, bottom=27.56708775369326, right=-81.6344763889124, top=49.575812214621536)
+      Resolution: (0.4491576420597607, 0.4491576420597607)
+      CRS: EPSG:4326
+
+--- GLDAS ---
+ Subcomponent: SoilMoi0_10cm_inst
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+ Subcomponent: SoilMoi10_40cm_inst
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+ Subcomponent: SoilMoi40_100cm_inst
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+ Subcomponent: SoilMoi100_200cm_inst
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+ Subcomponent: Evap_tavg
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+ Subcomponent: SWE_inst
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (96, 81)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.16215417932663, bottom=27.847773807705163, right=-81.97126967590633, top=49.40734062657368)
+      Resolution: (0.22457882102988036, 0.22457882102988036)
+      CRS: EPSG:4326
+
+--- CHIRPS ---
+  Total GeoTIFF files: 240
+    Sample 1: 135.tif
+      Shape: (476, 402)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.02740688670872, bottom=27.982521100323094, right=-81.97126967590634, top=49.3624248623677)
+      Resolution: (0.04491576420597607, 0.04491576420597607)
+      CRS: EPSG:4326
+    Sample 2: 6.tif
+      Shape: (476, 402)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.02740688670872, bottom=27.982521100323094, right=-81.97126967590634, top=49.3624248623677)
+      Resolution: (0.04491576420597607, 0.04491576420597607)
+      CRS: EPSG:4326
+    Sample 3: 82.tif
+      Shape: (476, 402)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.02740688670872, bottom=27.982521100323094, right=-81.97126967590634, top=49.3624248623677)
+      Resolution: (0.04491576420597607, 0.04491576420597607)
+      CRS: EPSG:4326
+    Sample 4: 226.tif
+      Shape: (476, 402)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.02740688670872, bottom=27.982521100323094, right=-81.97126967590634, top=49.3624248623677)
+      Resolution: (0.04491576420597607, 0.04491576420597607)
+      CRS: EPSG:4326
+    Sample 5: 237.tif
+      Shape: (476, 402)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.02740688670872, bottom=27.982521100323094, right=-81.97126967590634, top=49.3624248623677)
+      Resolution: (0.04491576420597607, 0.04491576420597607)
+      CRS: EPSG:4326
+
+--- MODIS_LAND_COVER ---
+  Total GeoTIFF files: 20
+  ⚠️ Expected at least 100 files, found only 20
+    Sample 1: 2022_01_01.tif
+      Shape: (1189, 1919)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-9819109.354, bottom=3111554.677002997, right=-5981109.354, top=5489554.677002998)
+      Resolution: (1999.9999999999998, 2000.0000000000007)
+      CRS: PROJCS["MODIS Sinusoidal",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+    Sample 2: 2013_01_01.tif
+      Shape: (1189, 1919)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-9819109.354, bottom=3111554.677002997, right=-5981109.354, top=5489554.677002998)
+      Resolution: (1999.9999999999998, 2000.0000000000007)
+      CRS: PROJCS["MODIS Sinusoidal",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+    Sample 3: 2006_01_01.tif
+      Shape: (1189, 1919)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-9819109.354, bottom=3111554.677002997, right=-5981109.354, top=5489554.677002998)
+      Resolution: (1999.9999999999998, 2000.0000000000007)
+      CRS: PROJCS["MODIS Sinusoidal",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+    Sample 4: 2010_01_01.tif
+      Shape: (1189, 1919)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-9819109.354, bottom=3111554.677002997, right=-5981109.354, top=5489554.677002998)
+      Resolution: (1999.9999999999998, 2000.0000000000007)
+      CRS: PROJCS["MODIS Sinusoidal",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+    Sample 5: 2004_01_01.tif
+      Shape: (1189, 1919)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-9819109.354, bottom=3111554.677002997, right=-5981109.354, top=5489554.677002998)
+      Resolution: (1999.9999999999998, 2000.0000000000007)
+      CRS: PROJCS["MODIS Sinusoidal",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Sinusoidal"],PARAMETER["longitude_of_center",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+
+--- TERRACLIMATE ---
+ Subcomponent: tmmx
+  Total GeoTIFF files: 240
+    Sample 1: 201912.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 2: 201104.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 3: 201108.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 4: 200703.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 5: 200709.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+ Subcomponent: tmmn
+  Total GeoTIFF files: 240
+    Sample 1: 201912.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 2: 201104.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 3: 201108.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 4: 200703.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 5: 200709.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+ Subcomponent: pr
+  Total GeoTIFF files: 240
+    Sample 1: 201912.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 2: 201104.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 3: 201108.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 4: 200703.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 5: 200709.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+ Subcomponent: aet
+  Total GeoTIFF files: 240
+    Sample 1: 201912.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 2: 201104.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 3: 201108.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 4: 200703.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 5: 200709.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+ Subcomponent: def
+  Total GeoTIFF files: 240
+    Sample 1: 201912.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 2: 201104.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 3: 201108.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 4: 200703.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+    Sample 5: 200709.tif
+      Shape: (595, 502)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.0140071019978, bottom=27.980312784388232, right=-81.97583619687781, top=49.360216546432845)
+      Resolution: (0.03593261136478086, 0.03593261136478086)
+      CRS: GEOGCS["Greenwich",DATUM["unnamed",SPHEROID["unnamed",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST]]
+
+--- USGS_DEM ---
+  Total GeoTIFF files: 1
+  ⚠️ Expected at least 100 files, found only 1
+    Sample 1: srtm_dem.tif
+      Shape: (3170, 2672)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.00067126162492, bottom=27.99765689213094, right=-81.9984329678697, top=49.35510277207256)
+      Resolution: (0.006737364630896411, 0.006737364630896411)
+      CRS: EPSG:4326
+
+--- USGS_WELL_DATA ---
+  File: monthly_groundwater_anomalies.csv
+  Shape: (240, 3469)
+  Date Range: 2003-01-01 00:00:00 to 2022-12-01 00:00:00
+  Missing values: 825646 total
+
+--- OPENLANDMAP ---
+  Total GeoTIFF files: 12
+  ⚠️ Expected at least 100 files, found only 12
+    Sample 1: sand_200cm.tif
+      Shape: (3170, 2673)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.00270321639543, bottom=27.993750041374586, right=-81.99372755800933, top=49.35119592131621)
+      Resolution: (0.0067373646308964115, 0.0067373646308964115)
+      CRS: EPSG:4326
+    Sample 2: clay_0cm.tif
+      Shape: (3170, 2673)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.00270321639543, bottom=27.993750041374586, right=-81.99372755800933, top=49.35119592131621)
+      Resolution: (0.0067373646308964115, 0.0067373646308964115)
+      CRS: EPSG:4326
+    Sample 3: clay_60cm.tif
+      Shape: (3170, 2673)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.00270321639543, bottom=27.993750041374586, right=-81.99372755800933, top=49.35119592131621)
+      Resolution: (0.0067373646308964115, 0.0067373646308964115)
+      CRS: EPSG:4326
+    Sample 4: sand_0cm.tif
+      Shape: (3170, 2673)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.00270321639543, bottom=27.993750041374586, right=-81.99372755800933, top=49.35119592131621)
+      Resolution: (0.0067373646308964115, 0.0067373646308964115)
+      CRS: EPSG:4326
+    Sample 5: sand_100cm.tif
+      Shape: (3170, 2673)
+      Number of bands (layers): 1
+      Bounds: BoundingBox(left=-100.00270321639543, bottom=27.993750041374586, right=-81.99372755800933, top=49.35119592131621)
+      Resolution: (0.0067373646308964115, 0.0067373646308964115)
+      CRS: EPSG:4326

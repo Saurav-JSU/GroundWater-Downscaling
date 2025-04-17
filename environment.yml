@@ -1,0 +1,23 @@
+name: grace-downscaling
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - geopandas
+  - pandas
+  - numpy
+  - xarray
+  - rioxarray
+  - rasterio
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - joblib
+  - earthengine-api
+  - geemap
+  - requests
+  - tqdm
+  - pip
+  - pip:
+      - hydrofunctions

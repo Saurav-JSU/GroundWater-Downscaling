@@ -1,0 +1,42 @@
+grace_dir: data/raw/grace
+rf_model_path: models/rf_model.pkl
+
+region:
+  name: "Mississippi River Basin"
+  lat_min: 28.0
+  lat_max: 49.0
+  lon_min: -100.0
+  lon_max: -82.0
+
+# Use one of the actual GRACE files. Update this with an actual filename you see under data/raw/grace/
+reference_file: data/raw/grace/20030131_20030227.tif
+
+# Target resolution and CRS for all rasters
+resolution: 0.25
+bbox:
+  left: -100.05
+  right: -81.63
+  top: 49.58
+  bottom: 27.56
+target_crs: EPSG:4326
+
+# Input directories for feature datasets (match lowercased folders)
+input_dirs:
+  - data/raw/gldas/SoilMoi0_10cm_inst
+  - data/raw/gldas/SoilMoi10_40cm_inst
+  - data/raw/gldas/SoilMoi40_100cm_inst
+  - data/raw/gldas/SoilMoi100_200cm_inst
+  - data/raw/gldas/Evap_tavg
+  - data/raw/gldas/SWE_inst
+  - data/raw/chirps
+  - data/raw/terraclimate/pr
+  - data/raw/terraclimate/tmmn
+  - data/raw/terraclimate/tmmx
+  - data/raw/terraclimate/aet
+  - data/raw/terraclimate/def
+  - data/raw/modis_land_cover
+  - data/raw/openlandmap
+  - data/raw/usgs_dem
+
+# Output file for processed feature stack
+output_path: data/processed/feature_stack.nc

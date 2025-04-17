@@ -1,0 +1,80 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# VS Code settings
+.vscode/
+
+# Environment files
+.env
+.venv/
+env/
+venv/
+*.env
+
+# macOS and system files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Python packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+
+# Earth Engine token
+.credentials
+
+# Data and results
+data/
+results/
+*.tif
+*.nc
+*.hdf
+*.csv
+*.xlsx
+
+# Temporary files
+*.bak
+*.tmp
+*.swp
+
+# Output folders
+outputs/
+figures/
+plots/
+models/
+logs/
+visualizations/
