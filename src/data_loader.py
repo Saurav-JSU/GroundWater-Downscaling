@@ -8,7 +8,7 @@ import pandas as pd
 
 # Initialize Earth Engine
 try:
-    ee.Initialize()
+    ee.Initialize(project = 'ee-jsuhydrolabenb')
 except Exception as e:
     ee.Authenticate()
     ee.Initialize()
@@ -141,51 +141,264 @@ def export_usgs_dem(region):
     )
 
 def download_usgs_well_data():
-    print("Downloading USGS well data (monthly groundwater anomalies)...")
-
+    """Download ALL available USGS well data with comprehensive coverage"""
+    import time
+    import signal
+    from tqdm import tqdm
+    print("🚰 COMPREHENSIVE USGS WELL DATA DOWNLOAD")
+    print("=" * 60)
+    print("Downloading ALL available groundwater wells (no arbitrary limits)")
+    print("Using 2004-2009 reference period to match GRACE data processing")
+    print("🔧 Realistic quality control for irregular groundwater sampling")
+    print("⏱️  This may take 30-60 minutes for comprehensive coverage...")
+    
+    # SAME reference period as GRACE
+    REFERENCE_START = "2004-01"
+    REFERENCE_END = "2009-12"
+    
     states = ['MS', 'AR', 'LA', 'TN', 'MO', 'KY', 'IL', 'IN', 'OH', 'AL']
     all_data = []
+    well_metadata = []
+    
+    # Comprehensive debug counters
+    debug_stats = {
+        'states_processed': 0,
+        'total_wells_found': 0,
+        'total_wells_tested': 0,
+        'no_data_returned': 0,
+        'missing_columns': 0,
+        'insufficient_total_data': 0,
+        'insufficient_reference_data': 0,
+        'successful_wells': 0,
+        'api_errors': 0,
+        'timeout_errors': 0
+    }
+    
+    # Progress tracking
+    start_time = time.time()
+    state_results = {}
 
-    for state in states:
-        print(f"Fetching sites from {state}...")
+    for state_idx, state in enumerate(states):
+        state_start_time = time.time()
+        print(f"\n{'='*20} STATE {state_idx+1}/10: {state} {'='*20}")
+        
         try:
+            # Get info for ALL groundwater sites in the state
+            print(f"🔍 Fetching all groundwater sites in {state}...")
             info, _ = nwis.get_info(stateCd=state, siteType="GW", siteStatus="active")
             site_ids = info['site_no'].unique().tolist()
+            
+            debug_stats['total_wells_found'] += len(site_ids)
+            print(f"   ✅ Found {len(site_ids)} potential wells")
+            
+            if len(site_ids) == 0:
+                print(f"   ⚠️ No wells found in {state}")
+                continue
+                
         except Exception as e:
-            print(f"Failed to fetch sites for {state}: {e}")
+            print(f"   ❌ Failed to fetch sites for {state}: {e}")
+            debug_stats['api_errors'] += 1
             continue
 
-        for site in site_ids:
+        # Process ALL wells in this state (no limit!)
+        state_successful = 0
+        state_tested = 0
+        
+        print(f"🔄 Processing ALL {len(site_ids)} wells in {state}...")
+        
+        # Use progress bar for each state
+        for i, site in enumerate(tqdm(site_ids, desc=f"{state} wells", 
+                                     unit="well", leave=False)):
+            state_tested += 1
+            debug_stats['total_wells_tested'] += 1
+            
+            # Show detailed progress every 50 wells
+            show_details = (i % 50 == 0) or (i < 3)  
+            
             try:
-                df, _ = nwis.get_gwlevels(site, start='2003-01-01', end='2022-12-31', datetime_index=False)
-                if df.empty or 'lev_dt' not in df.columns or 'lev_va' not in df.columns:
-                    continue
-                df['datetime'] = pd.to_datetime(df['lev_dt'])
-                df['depth_m'] = df['lev_va'] * 0.3048
-                monthly = df.set_index('datetime')['depth_m'].resample('MS').agg(['mean', 'count'])
-                monthly = monthly[monthly['count'] >= 2]['mean']
-                anomaly = monthly - monthly.mean()
-                all_data.append(anomaly.rename(site))
-            except Exception as e:
+                # Add timeout for individual wells to prevent hanging
+                import signal
+                
+                def timeout_handler(signum, frame):
+                    raise TimeoutError("Well processing timeout")
+                
+                # Set 30 second timeout per well
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(30)
+                
+                try:
+                    # Get groundwater level data
+                    df, _ = nwis.get_gwlevels(site, start='2003-01-01', end='2022-12-31', 
+                                            datetime_index=False)
+                    
+                    if df.empty:
+                        if show_details: print(f"      No data: {site}")
+                        debug_stats['no_data_returned'] += 1
+                        continue
+                    
+                    # Check for required columns
+                    if 'lev_dt' not in df.columns or 'lev_va' not in df.columns:
+                        if show_details: print(f"      Missing columns: {site}")
+                        debug_stats['missing_columns'] += 1
+                        continue
+                    
+                    if show_details: print(f"      Processing {site}: {len(df)} raw measurements")
+                    
+                    # Process the data
+                    df['datetime'] = pd.to_datetime(df['lev_dt'])
+                    df['depth_m'] = df['lev_va'] * 0.3048  # Convert feet to meters
+                    
+                    # Aggregate to monthly (any measurement per month)
+                    monthly = df.set_index('datetime')['depth_m'].resample('MS').mean().dropna()
+                    
+                    # Quality control: need at least 12 months total
+                    if len(monthly) < 12:
+                        if show_details: print(f"      Insufficient data: {len(monthly)} months")
+                        debug_stats['insufficient_total_data'] += 1
+                        continue
+                    
+                    # Check reference period data
+                    ref_start = pd.to_datetime(REFERENCE_START)
+                    ref_end = pd.to_datetime(REFERENCE_END)
+                    reference_data = monthly[(monthly.index >= ref_start) & (monthly.index <= ref_end)]
+                    
+                    # Need at least 6 months in reference period
+                    if len(reference_data) < 6:
+                        if show_details: print(f"      Insufficient reference: {len(reference_data)} months")
+                        debug_stats['insufficient_reference_data'] += 1
+                        continue
+                    
+                    # SUCCESS! Calculate anomalies
+                    reference_mean = reference_data.mean()
+                    anomaly = monthly - reference_mean
+                    all_data.append(anomaly.rename(site))
+                    
+                    # Save well metadata
+                    site_info = info[info['site_no'] == site].iloc[0]
+                    well_metadata.append({
+                        'well_id': site,
+                        'lat': float(site_info['dec_lat_va']),
+                        'lon': float(site_info['dec_long_va']),
+                        'state': state,
+                        'station_nm': site_info.get('station_nm', ''),
+                        'n_months_total': len(monthly),
+                        'n_months_reference': len(reference_data),
+                        'reference_period': f"{REFERENCE_START}_to_{REFERENCE_END}",
+                        'first_measurement': str(monthly.index[0].date()),
+                        'last_measurement': str(monthly.index[-1].date())
+                    })
+                    
+                    state_successful += 1
+                    debug_stats['successful_wells'] += 1
+                    
+                    if show_details: print(f"      ✅ SUCCESS: {site}")
+                    
+                finally:
+                    # Clear the timeout
+                    signal.alarm(0)
+                    
+            except TimeoutError:
+                debug_stats['timeout_errors'] += 1
+                if show_details: print(f"      ⏱️ Timeout: {site}")
                 continue
+            except Exception as e:
+                debug_stats['api_errors'] += 1
+                if show_details: print(f"      ❌ Error {site}: {e}")
+                continue
+        
+        # State summary
+        state_elapsed = time.time() - state_start_time
+        success_rate = (state_successful / state_tested * 100) if state_tested > 0 else 0
+        
+        state_results[state] = {
+            'tested': state_tested,
+            'successful': state_successful,
+            'success_rate': success_rate,
+            'time_minutes': state_elapsed / 60
+        }
+        
+        print(f"   🏁 {state} COMPLETE: {state_successful}/{state_tested} wells ({success_rate:.1f}%) in {state_elapsed/60:.1f} minutes")
+        debug_stats['states_processed'] += 1
+
+    # Final comprehensive summary
+    total_elapsed = time.time() - start_time
+    print(f"\n{'='*60}")
+    print(f"🎉 COMPREHENSIVE DOWNLOAD COMPLETE!")
+    print(f"{'='*60}")
+    print(f"⏱️  Total time: {total_elapsed/60:.1f} minutes ({total_elapsed/3600:.1f} hours)")
+    
+    print(f"\n📊 FINAL STATISTICS:")
+    print(f"   States processed: {debug_stats['states_processed']}/10")
+    print(f"   Total wells found: {debug_stats['total_wells_found']:,}")
+    print(f"   Total wells tested: {debug_stats['total_wells_tested']:,}")
+    print(f"   ✅ SUCCESSFUL wells: {debug_stats['successful_wells']:,}")
+    print(f"   Overall success rate: {debug_stats['successful_wells']/debug_stats['total_wells_tested']*100:.1f}%")
+    
+    print(f"\n📋 REJECTION REASONS:")
+    print(f"   No data returned: {debug_stats['no_data_returned']:,}")
+    print(f"   Missing columns: {debug_stats['missing_columns']:,}")
+    print(f"   Insufficient total data (<12 months): {debug_stats['insufficient_total_data']:,}")
+    print(f"   Insufficient reference data (<6 months): {debug_stats['insufficient_reference_data']:,}")
+    print(f"   API/processing errors: {debug_stats['api_errors']:,}")
+    print(f"   Timeout errors: {debug_stats['timeout_errors']:,}")
 
     if not all_data:
-        print("No valid well data found.")
+        print("\n❌ No valid well data found after comprehensive search.")
         return
 
-    print("Saving final USGS well anomaly table...")
+    print(f"\n🎯 COMPREHENSIVE SUCCESS! Processed {len(all_data):,} wells")
+    
+    # Save time series data
+    print("💾 Saving comprehensive well time series data...")
     combined_df = pd.concat(all_data, axis=1)
     combined_df.index.name = 'Date'
     combined_df.to_csv(os.path.join(RAW_DIR, "usgs_well_data", "monthly_groundwater_anomalies.csv"))
-    print("Saved: monthly_groundwater_anomalies.csv")
-
-def download_usgs_well_data():
-    print("Downloading USGS well data for Mississippi River Basin...")
-    site_data = nwis.get_sites(stateCd='MS', parameterCd='72019', siteType='GW')
-    site_ids = site_data['site_no'].tolist()
-    data = nwis.get_record(sites=site_ids, service='dv', start='2003-01-01', end='2022-12-31', parameterCd='72019')
-    data.to_csv(os.path.join(RAW_DIR, "usgs_well_data", "mississippi_wells.csv"))
-    print("USGS well data saved.")
+    
+    # Save comprehensive metadata
+    print("💾 Saving comprehensive well metadata...")
+    metadata_df = pd.DataFrame(well_metadata)
+    metadata_df.to_csv(os.path.join(RAW_DIR, "usgs_well_data", "well_metadata.csv"), index=False)
+    
+    print(f"\n✅ SAVED COMPREHENSIVE DATASET:")
+    print(f"   - Time series: monthly_groundwater_anomalies.csv")
+    print(f"   - Metadata: well_metadata.csv")
+    print(f"   - Total wells: {len(all_data):,}")
+    print(f"   - Total measurements: {combined_df.count().sum():,}")
+    
+    # Detailed state breakdown
+    print(f"\n📊 WELLS BY STATE:")
+    state_counts = metadata_df['state'].value_counts()
+    for state, count in state_counts.items():
+        tested = state_results.get(state, {}).get('tested', 'N/A')
+        rate = state_results.get(state, {}).get('success_rate', 0)
+        time_min = state_results.get(state, {}).get('time_minutes', 0)
+        print(f"   {state}: {count:3d} wells ({rate:5.1f}% success, {time_min:4.1f} min)")
+    
+    # Data quality metrics
+    print(f"\n📊 COMPREHENSIVE DATA QUALITY:")
+    total_possible = len(combined_df) * len(combined_df.columns)
+    actual_data = combined_df.count().sum()
+    coverage = actual_data / total_possible * 100
+    
+    print(f"   Time coverage: {len(combined_df)} months ({combined_df.index[0].date()} to {combined_df.index[-1].date()})")
+    print(f"   Data completeness: {coverage:.1f}% ({actual_data:,}/{total_possible:,} values)")
+    print(f"   Average measurements per well: {actual_data/len(combined_df.columns):.1f}")
+    
+    # Reference period statistics
+    avg_ref_months = metadata_df['n_months_reference'].mean()
+    min_ref_months = metadata_df['n_months_reference'].min()
+    max_ref_months = metadata_df['n_months_reference'].max()
+    
+    print(f"\n📊 REFERENCE PERIOD COVERAGE ({REFERENCE_START} to {REFERENCE_END}):")
+    print(f"   Average months: {avg_ref_months:.1f}")
+    print(f"   Range: {min_ref_months} to {max_ref_months} months")
+    print(f"   Wells with ≥36 months: {(metadata_df['n_months_reference'] >= 36).sum():,}")
+    print(f"   Wells with ≥24 months: {(metadata_df['n_months_reference'] >= 24).sum():,}")
+    
+    print(f"\n🚀 READY FOR COMPREHENSIVE VALIDATION WITH {len(all_data):,} WELLS!")
+    print(f"This is a substantial dataset for robust model validation.")
+    
+    return len(all_data)  # Return number of wells for pipeline tracking
 
 def export_openlandmap_soil(region):
     datasets = {

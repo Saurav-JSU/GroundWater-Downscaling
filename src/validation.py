@@ -1,4 +1,4 @@
-# src/validation.py
+# src/validation.py - DEBUG VERSION
 import os
 import numpy as np
 import pandas as pd
@@ -12,7 +12,7 @@ import yaml
 from tqdm import tqdm
 
 def validate_with_wells(config_path="src/config.yaml"):
-    """Validate derived groundwater against USGS well observations"""
+    """Validate derived groundwater against USGS well observations - DEBUG VERSION"""
     # Create output directories
     results_dir = Path("results")
     figures_dir = Path("figures/validation")
@@ -21,212 +21,189 @@ def validate_with_wells(config_path="src/config.yaml"):
     
     # Load groundwater predictions
     print("Loading groundwater storage predictions...")
-    gws_ds = xr.open_dataset("results/groundwater_storage_anomalies.nc")
+    gws_path = "results/groundwater_storage_anomalies.nc"
+    if not os.path.exists(gws_path):
+        print(f"❌ Groundwater data file not found: {gws_path}")
+        return pd.DataFrame()
+    
+    gws_ds = xr.open_dataset(gws_path)
+    print(f"✅ Loaded groundwater data with {len(gws_ds.time)} time steps")
+    print(f"   Spatial grid: {len(gws_ds.lat)} × {len(gws_ds.lon)}")
+    print(f"   Lat range: {gws_ds.lat.min().values:.2f} to {gws_ds.lat.max().values:.2f}")
+    print(f"   Lon range: {gws_ds.lon.min().values:.2f} to {gws_ds.lon.max().values:.2f}")
+    print(f"   Time range: {gws_ds.time.values[0]} to {gws_ds.time.values[-1]}")
     
     # Load well data
-    print("Loading well data...")
+    print("\nLoading well data...")
     well_data_path = "data/raw/usgs_well_data/monthly_groundwater_anomalies.csv"
+    well_data = pd.read_csv(well_data_path, index_col=0, parse_dates=True)
+    print(f"✅ Loaded well data with {len(well_data.columns)} wells")
+    print(f"   Time range: {well_data.index[0]} to {well_data.index[-1]}")
+    print(f"   Sample well IDs: {list(well_data.columns[:3])}")
     
-    if not os.path.exists(well_data_path):
-        print(f"⚠️ Well data file not found: {well_data_path}")
-        print("Simulating well data for demonstration purposes...")
-        # Generate sample well data for testing
-        n_wells = 50
-        well_locs = []
-        for i in range(n_wells):
-            lat_idx = np.random.randint(0, len(gws_ds.lat))
-            lon_idx = np.random.randint(0, len(gws_ds.lon))
-            well_locs.append({
-                'well_id': f'USGS-{i:04d}',
-                'lat': float(gws_ds.lat[lat_idx].values),
-                'lon': float(gws_ds.lon[lon_idx].values)
-            })
-        well_locations = pd.DataFrame(well_locs)
-        
-        # Create synthetic time series
-        index = pd.DatetimeIndex(gws_ds.time.values)
-        well_data = pd.DataFrame(index=index)
-        for well in well_locs:
-            well_id = well['well_id']
-            gws_at_well = gws_ds.groundwater.sel(
-                lat=well['lat'], lon=well['lon'], method='nearest'
-            ).values
-            # Add some noise to simulate real data
-            noise = np.random.normal(0, 1.5, size=len(gws_at_well))
-            well_data[well_id] = gws_at_well + noise
+    # Load well coordinates
+    well_locations_path = "data/raw/usgs_well_data/well_metadata.csv"
+    well_locations = pd.read_csv(well_locations_path)
+    print(f"✅ Have coordinates for {len(well_locations)} wells")
+    
+    # Debug: Check coordinate ranges
+    print(f"   Well lat range: {well_locations['lat'].min():.2f} to {well_locations['lat'].max():.2f}")
+    print(f"   Well lon range: {well_locations['lon'].min():.2f} to {well_locations['lon'].max():.2f}")
+    
+    # Debug: Check time alignment
+    gws_times = pd.DatetimeIndex(gws_ds.time.values)
+    well_times = well_data.index
+    common_times = gws_times.intersection(well_times)
+    print(f"\n🔍 Time alignment check:")
+    print(f"   GWS time points: {len(gws_times)}")
+    print(f"   Well time points: {len(well_times)}")
+    print(f"   Common time points: {len(common_times)}")
+    if len(common_times) > 0:
+        print(f"   First common: {common_times[0]}")
+        print(f"   Last common: {common_times[-1]}")
     else:
-        # Load actual well data
-        well_data = pd.read_csv(well_data_path, index_col=0, parse_dates=True)
-        
-        # Load well location information (modify path as needed)
-        well_locations_path = "data/raw/usgs_well_data/well_metadata.csv"
-        if os.path.exists(well_locations_path):
-            well_locations = pd.read_csv(well_locations_path)
-        else:
-            print(f"⚠️ Well location file not found: {well_locations_path}")
-            # Extract well IDs from the data file and create dummy locations
-            # In a real scenario, you'd need actual coordinates
-            well_ids = well_data.columns
-            well_locs = []
-            for well_id in well_ids:
-                lat = np.random.uniform(gws_ds.lat.min(), gws_ds.lat.max())
-                lon = np.random.uniform(gws_ds.lon.min(), gws_ds.lon.max())
-                well_locs.append({
-                    'well_id': well_id,
-                    'lat': lat,
-                    'lon': lon
-                })
-            well_locations = pd.DataFrame(well_locs)
+        print("   ❌ NO COMMON TIME POINTS!")
+        print(f"   GWS sample times: {gws_times[:3].tolist()}")
+        print(f"   Well sample times: {well_times[:3].tolist()}")
     
-    # Calculate validation metrics for each well
+    # Debug each well individually
     results = []
-    example_wells = []
+    debug_info = []
     
-    print("Calculating validation metrics...")
+    print(f"\n🔍 Processing wells individually (showing details for first 5):")
     for idx, well in tqdm(well_locations.iterrows(), total=len(well_locations)):
-        well_id = well['well_id']
+        well_id = str(well['well_id'])  # Convert to string to match CSV columns
+        show_details = idx < 5  # Show details for first 5 wells
         
-        # Skip if this well isn't in our data
+        debug_entry = {'well_id': well_id, 'step_failed': 'unknown'}
+        
+        if show_details: print(f"\n  Well {idx+1}: {well_id}")
+        
+        # Check if well is in data
         if well_id not in well_data.columns:
+            debug_entry['step_failed'] = 'not_in_data'
+            if show_details: print(f"    ❌ Well ID not found in data")
+            debug_info.append(debug_entry)
             continue
         
-        # Extract predicted GWS at well location
+        # Check coordinates are within grid bounds
+        if (well['lat'] < gws_ds.lat.min() or well['lat'] > gws_ds.lat.max() or
+            well['lon'] < gws_ds.lon.min() or well['lon'] > gws_ds.lon.max()):
+            debug_entry['step_failed'] = 'outside_grid'
+            if show_details: print(f"    ❌ Outside grid bounds: ({well['lat']:.2f}, {well['lon']:.2f})")
+            debug_info.append(debug_entry)
+            continue
+        
+        # Try to extract GWS at well location
         try:
             gws_at_well = gws_ds.groundwater.sel(
                 lat=well['lat'], lon=well['lon'], method='nearest'
-            ).values
-        except:
-            print(f"⚠️ Could not extract GWS at location for well {well_id}")
+            )
+            if show_details: print(f"    ✅ Extracted GWS at location")
+            
+            # Convert to pandas Series
+            pred_series = pd.Series(
+                gws_at_well.values, 
+                index=pd.DatetimeIndex(gws_ds.time.values)
+            )
+            if show_details: print(f"    ✅ Created prediction series: {len(pred_series)} points")
+            
+        except Exception as e:
+            debug_entry['step_failed'] = 'extraction_error'
+            debug_entry['error'] = str(e)
+            if show_details: print(f"    ❌ Extraction error: {e}")
+            debug_info.append(debug_entry)
             continue
         
-        # Get observed data for same timeperiod
-        observed = well_data[well_id].reindex(gws_ds.time.values)
+        # Get observed data
+        observed = well_data[well_id].copy()
+        if show_details: print(f"    ✅ Got observed data: {len(observed)} points")
         
-        # Skip wells with too much missing data
-        if observed.isna().sum() > len(observed) * 0.3:
+        # Find common dates
+        common_dates = pred_series.index.intersection(observed.index)
+        if show_details: print(f"    🔍 Common dates: {len(common_dates)}")
+        
+        if len(common_dates) < 12:  # Need at least 1 year
+            debug_entry['step_failed'] = 'insufficient_overlap'
+            debug_entry['common_dates'] = len(common_dates)
+            if show_details: print(f"    ❌ Only {len(common_dates)} common dates, need ≥12")
+            debug_info.append(debug_entry)
             continue
+            
+        # Align data
+        obs_aligned = observed.loc[common_dates]
+        pred_aligned = pred_series.loc[common_dates]
         
-        # Fill any remaining NaNs by interpolation
-        observed = observed.interpolate()
+        # Remove NaN values
+        valid_mask = ~(obs_aligned.isna() | pred_aligned.isna())
+        valid_count = valid_mask.sum()
+        if show_details: print(f"    🔍 Valid (non-NaN) pairs: {valid_count}")
         
-        # Standardize both time series to compare patterns
-        # This addresses differences in units and specific yield
-        obs_std = (observed - observed.mean()) / observed.std()
-        gws_std = (gws_at_well - np.nanmean(gws_at_well)) / np.nanstd(gws_at_well)
+        if valid_count < 6:  # Need at least 6 valid pairs
+            debug_entry['step_failed'] = 'insufficient_valid_data'
+            debug_entry['valid_pairs'] = valid_count
+            if show_details: print(f"    ❌ Only {valid_count} valid pairs, need ≥6")
+            debug_info.append(debug_entry)
+            continue
+            
+        obs_valid = obs_aligned[valid_mask]
+        pred_valid = pred_aligned[valid_mask]
         
         # Calculate metrics
         try:
-            correlation = pearsonr(gws_std, obs_std)[0]
-            rmse = np.sqrt(mean_squared_error(obs_std, gws_std))
-            nse = 1 - (np.sum((obs_std - gws_std)**2) / 
-                      np.sum((obs_std - obs_std.mean())**2))
+            correlation, p_value = pearsonr(pred_valid, obs_valid)
+            rmse = np.sqrt(mean_squared_error(obs_valid, pred_valid))
+            nse = 1 - (np.sum((obs_valid - pred_valid)**2) / 
+                      np.sum((obs_valid - obs_valid.mean())**2))
             
             results.append({
                 'well_id': well_id,
                 'lat': well['lat'],
                 'lon': well['lon'],
                 'correlation': correlation,
+                'p_value': p_value,
                 'rmse': rmse,
-                'nse': nse
+                'nse': nse,
+                'n_observations': len(obs_valid),
+                'n_common_dates': len(common_dates)
             })
             
-            # Save a few wells for example plots
-            if len(example_wells) < 5 and correlation > 0.5:
-                example_wells.append({
-                    'well_id': well_id, 
-                    'observed': observed,
-                    'predicted': pd.Series(gws_at_well, index=observed.index)
-                })
-                
+            debug_entry['step_failed'] = 'success'
+            debug_entry['correlation'] = correlation
+            if show_details: print(f"    ✅ SUCCESS! Correlation: {correlation:.3f}, RMSE: {rmse:.2f}")
+            
         except Exception as e:
-            print(f"⚠️ Error calculating metrics for well {well_id}: {e}")
+            debug_entry['step_failed'] = 'metrics_calculation'
+            debug_entry['error'] = str(e)
+            if show_details: print(f"    ❌ Metrics calculation error: {e}")
+        
+        debug_info.append(debug_entry)
     
-    # Create DataFrame with results
+    # Print debug summary
+    debug_df = pd.DataFrame(debug_info)
+    print(f"\n📊 DEBUG SUMMARY:")
+    failure_counts = debug_df['step_failed'].value_counts()
+    for step, count in failure_counts.items():
+        print(f"   {step}: {count} wells")
+    
+    if len(results) == 0:
+        print(f"\n❌ No wells passed validation. Most common failure: {failure_counts.index[0]}")
+        
+        # Save debug info for analysis
+        debug_df.to_csv("results/validation_debug.csv", index=False)
+        print(f"   Saved debug info to: results/validation_debug.csv")
+        return pd.DataFrame()
+    
+    # Success! Process results
     metrics_df = pd.DataFrame(results)
     metrics_df.to_csv("results/well_validation_metrics.csv", index=False)
     
-    print(f"Validation complete: {len(results)} wells analyzed")
-    print(f"Average correlation: {metrics_df['correlation'].mean():.2f}")
-    print(f"Average RMSE: {metrics_df['rmse'].mean():.2f}")
-    print(f"Average NSE: {metrics_df['nse'].mean():.2f}")
-    
-    # Create validation plots
-    create_validation_plots(metrics_df, example_wells, figures_dir)
+    print(f"\n✅ Validation successful: {len(results)} wells")
+    print(f"   Average correlation: {metrics_df['correlation'].mean():.3f}")
+    print(f"   Average RMSE: {metrics_df['rmse'].mean():.2f} cm")
+    print(f"   Average NSE: {metrics_df['nse'].mean():.3f}")
     
     return metrics_df
-
-def create_validation_plots(metrics_df, example_wells, figures_dir):
-    """Create validation plots for the paper"""
-    
-    # 1. Histogram of correlation coefficients
-    plt.figure(figsize=(10, 6))
-    plt.hist(metrics_df['correlation'], bins=20, color='steelblue', edgecolor='black')
-    plt.axvline(metrics_df['correlation'].mean(), color='red', linestyle='--', 
-                label=f'Mean: {metrics_df["correlation"].mean():.2f}')
-    plt.xlabel('Correlation Coefficient')
-    plt.ylabel('Number of Wells')
-    plt.title('Distribution of Correlation Coefficients')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.savefig(figures_dir / 'correlation_histogram.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    # 2. Spatial map of correlations
-    plt.figure(figsize=(12, 8))
-    sc = plt.scatter(metrics_df['lon'], metrics_df['lat'], 
-                     c=metrics_df['correlation'], cmap='viridis', 
-                     s=50, edgecolor='black', alpha=0.7)
-    plt.colorbar(sc, label='Correlation')
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    plt.title('Spatial Distribution of Model Performance')
-    plt.grid(True, alpha=0.3)
-    plt.savefig(figures_dir / 'correlation_spatial.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    # 3. Example time series plots for a few wells
-    for i, well in enumerate(example_wells):
-        plt.figure(figsize=(12, 6))
-        
-        # Plot standardized series to show pattern matching
-        obs_std = (well['observed'] - well['observed'].mean()) / well['observed'].std()
-        pred_std = (well['predicted'] - well['predicted'].mean()) / well['predicted'].std()
-        
-        plt.plot(obs_std, 'b-', label='Well Observations', linewidth=2)
-        plt.plot(pred_std, 'r--', label='Model Predictions', linewidth=2)
-        
-        correlation = pearsonr(pred_std.dropna(), obs_std.loc[pred_std.dropna().index])[0]
-        plt.title(f'Well {well["well_id"]} - Correlation: {correlation:.2f}')
-        plt.xlabel('Date')
-        plt.ylabel('Standardized Anomaly')
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.savefig(figures_dir / f'well_timeseries_{i+1}.png', dpi=300, bbox_inches='tight')
-        plt.close()
-    
-    # 4. Combined metrics summary
-    plt.figure(figsize=(10, 6))
-    metrics = ['correlation', 'rmse', 'nse']
-    means = [metrics_df[m].mean() for m in metrics]
-    stds = [metrics_df[m].std() for m in metrics]
-    
-    bars = plt.bar(metrics, means, yerr=stds, capsize=10, color='steelblue', edgecolor='black')
-    
-    # Adjust y-axis range for NSE which can go negative
-    plt.ylim(min(0, min(means) - max(stds) * 1.5), max(means) + max(stds) * 1.5)
-    
-    plt.title('Summary of Validation Metrics')
-    plt.ylabel('Value')
-    plt.grid(True, alpha=0.3, axis='y')
-    
-    # Add value labels on bars
-    for bar, mean in zip(bars, means):
-        height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height + 0.02,
-                f'{mean:.2f}', ha='center', va='bottom')
-    
-    plt.savefig(figures_dir / 'metrics_summary.png', dpi=300, bbox_inches='tight')
-    plt.close()
 
 if __name__ == "__main__":
     validate_with_wells()
