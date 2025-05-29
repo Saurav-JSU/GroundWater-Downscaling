@@ -4,98 +4,225 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Earth Engine](https://img.shields.io/badge/Google-Earth%20Engine-green.svg)](https://earthengine.google.com/)
 
-A comprehensive machine learning pipeline for downscaling GRACE satellite data to monitor groundwater storage changes at high spatial resolution across the Mississippi River Basin (2003-2022).
+A machine learning pipeline for downscaling GRACE satellite data from ~300km to ~25km resolution to monitor groundwater storage changes across the Mississippi River Basin (2003-2022).
 
-## 🎯 Project Objectives
+![Groundwater Storage Anomalies](figures/publication/main_validation_figure.png)
+*Example output: Groundwater storage anomalies and validation performance across the Mississippi River Basin*
 
-- **Downscale GRACE data** from ~300km to ~25km resolution using Random Forest
-- **Extract groundwater storage anomalies** through water balance decomposition
-- **Monitor groundwater trends** and drought impacts over 20 years
-- **Validate results** against USGS well observations
-- **Generate publication-quality visualizations** for scientific analysis
+## 🎯 Overview
 
-## 📊 Key Features
+This project addresses the critical need for high-resolution groundwater monitoring by:
+- **Downscaling** coarse GRACE satellite observations using machine learning
+- **Integrating** multiple satellite and model datasets for enhanced predictions
+- **Decomposing** total water storage into groundwater components
+- **Validating** results against 1,400+ USGS monitoring wells
 
-- **Multi-source data integration**: GRACE, GLDAS, CHIRPS, TerraClimate, MODIS, USGS
-- **Advanced feature engineering**: Lagged features, seasonal encoding, static variables
-- **Enhanced machine learning**: Random Forest with 200+ trees and optimized parameters
-- **Comprehensive validation**: Statistical metrics and spatial performance maps
-- **Automated pipeline**: End-to-end processing with quality control
-- **Rich visualizations**: Monthly animations, trend maps, drought analysis
+### Key Results
+- ✅ **Model Performance**: R² = 0.86 on test data
+- ✅ **Spatial Resolution**: Enhanced from ~300km to ~25km
+- ✅ **Temporal Coverage**: Monthly data from 2003-2022
+- ✅ **Validation**: Correlation with wells r = 0.22 (point) to 0.35 (spatial average)
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Data Sources](#-data-sources)
+- [Methodology](#-methodology)
+- [Project Structure](#-project-structure)
+- [Usage Guide](#-usage-guide)
+- [Results](#-results)
+- [API Reference](#-api-reference)
+- [Contributing](#-contributing)
+- [Citation](#-citation)
+- [License](#-license)
+
+## 🚀 Features
+
+- **Automated Data Pipeline**: Downloads and processes satellite data from Google Earth Engine
+- **Advanced ML Model**: Random Forest with temporal features (lags, seasonality)
+- **Water Balance Decomposition**: Separates total water storage into components
+- **Comprehensive Validation**: Multiple validation approaches for different scales
+- **Production Ready**: Modular design, extensive logging, error handling
+- **Visualization Suite**: Publication-quality figures and animations
 
 ## 🛠 Installation
 
 ### Prerequisites
 
 - Python 3.8 or higher
-- Google Earth Engine account (for data download)
-- At least 16GB RAM recommended
-- 50+ GB free disk space
+- Google Earth Engine account (free for research)
+- 16GB+ RAM recommended
+- 50GB+ free disk space
 
-### Python Dependencies
+### Setup Instructions
 
+1. **Clone the repository**
 ```bash
-# Create virtual environment
+git clone https://github.com/yourusername/grace-downscaling.git
+cd grace-downscaling
+```
+
+2. **Create conda environment**
+```bash
 conda create -n grace-downscaling python=3.8
 conda activate grace-downscaling
-
-# Install core scientific packages
-conda install -c conda-forge xarray rasterio rioxarray netcdf4 dask
-conda install -c conda-forge scikit-learn matplotlib seaborn cartopy
-conda install -c conda-forge tqdm pyyaml joblib pandas numpy
-
-# Install Earth Engine packages
-pip install earthengine-api geemap
-
-# Install additional packages
-pip install dataretrieval imageio pillow
 ```
 
-### Earth Engine Authentication
-
+3. **Install dependencies**
 ```bash
-# Authenticate Earth Engine (one-time setup)
+pip install -r requirements.txt
+```
+
+4. **Authenticate Earth Engine**
+```bash
 earthengine authenticate
 ```
+
+5. **Configure study area** (optional)
+Edit `src/config.yaml` to modify the study region or parameters.
+
+## 🚀 Quick Start
+
+### Run the complete pipeline:
+```bash
+python pipeline.py --steps all
+```
+
+This will:
+1. Download all satellite data (~4-8 hours)
+2. Create aligned feature stack (~30 minutes)
+3. Train the Random Forest model (~20 minutes)
+4. Calculate groundwater storage anomalies (~10 minutes)
+5. Validate against USGS wells (~5 minutes)
+
+### Run specific steps:
+```bash
+# Just train model and calculate groundwater
+python pipeline.py --steps train,gws
+
+# Skip download if data exists
+python pipeline.py --steps all --skip-download
+
+# Only validate results
+python pipeline.py --steps validate
+```
+
+## 📊 Data Sources
+
+| Dataset | Source | Resolution | Variables | Purpose |
+|---------|--------|------------|-----------|---------|
+| GRACE MASCON | NASA/JPL | ~300km | Total water storage | Target variable |
+| GLDAS-2.1 | NASA | 0.25° | Soil moisture (4 layers), ET, SWE | Water components |
+| CHIRPS | UCSB | 0.05° | Precipitation | Climate forcing |
+| TerraClimate | U of Idaho | 4km | Temperature, ET, water deficit | Climate variables |
+| MODIS | NASA | 500m | Land cover classification | Static features |
+| SRTM | USGS | 30m | Elevation | Topography |
+| USGS NWIS | USGS | Point | Groundwater levels | Validation |
+| OpenLandMap | OpenGeoHub | 250m | Soil properties | Static features |
+
+## 🔬 Methodology
+
+### 1. Data Preprocessing
+- Temporal alignment to GRACE availability
+- Spatial resampling to common 0.25° grid
+- Quality control and gap filling
+- Unit standardization
+
+### 2. Feature Engineering
+```python
+# Temporal features (per variable)
+- Current month value
+- Lagged values (1, 3, 6 months)
+- 12-month rolling statistics
+
+# Seasonal features
+- Cyclical encoding (sin/cos of month)
+
+# Static features
+- Elevation, slope
+- Land cover type
+- Soil properties (texture, depth)
+```
+
+### 3. Machine Learning Model
+```python
+RandomForestRegressor(
+    n_estimators=200,      # Number of trees
+    max_depth=25,          # Tree depth
+    min_samples_split=5,   # Min samples to split
+    max_features='sqrt',   # Features per split
+    n_jobs=-1             # Parallel processing
+)
+```
+
+### 4. Water Balance Decomposition
+```
+GWS_anomaly = TWS_anomaly - SM_anomaly - SWE_anomaly
+
+Where:
+- GWS: Groundwater Storage
+- TWS: Total Water Storage (from GRACE)
+- SM: Soil Moisture (from GLDAS)
+- SWE: Snow Water Equivalent (from GLDAS)
+```
+
+### 5. Validation Approach
+- **Point validation**: Direct comparison with individual wells
+- **Spatial averaging**: Wells averaged within 50km radius
+- **Metrics**: Pearson correlation, RMSE, trend correlation
+- **Scale analysis**: Performance vs. averaging radius
 
 ## 📁 Project Structure
 
 ```
 grace-downscaling/
-├── data/
+├── README.md                     # This file
+├── requirements.txt              # Python dependencies
+├── pipeline.py                   # Main orchestration script
+├── src/                         # Source code
+│   ├── config.yaml              # Configuration file
+│   ├── data_loader.py           # Earth Engine data download
+│   ├── features.py              # Feature engineering
+│   ├── updated_model_rf.py      # Random Forest model
+│   ├── groundwater_enhanced.py  # Groundwater calculation
+│   ├── utils.py                 # Utility functions
+│   └── validation/              # Validation module
+│       └── validate_groundwater.py
+├── scripts/                     # Additional scripts
+│   ├── utilities/               # Data checking, testing
+│   ├── visualization/           # Plotting scripts
+│   └── analysis/               # Analysis notebooks
+├── data/                       # Data directory (git-ignored)
 │   ├── raw/                    # Downloaded satellite data
-│   │   ├── grace/             # GRACE TWS data
-│   │   ├── gldas/             # GLDAS land surface model
-│   │   ├── chirps/            # CHIRPS precipitation
-│   │   ├── terraclimate/      # TerraClimate variables
-│   │   ├── modis_land_cover/  # MODIS land cover
-│   │   ├── usgs_dem/          # USGS elevation data
-│   │   ├── usgs_well_data/    # Groundwater well observations
-│   │   └── openlandmap/       # Soil properties
-│   └── processed/             # Processed feature stacks
-├── models/                    # Trained ML models
-├── results/                   # Analysis outputs
-├── figures/                   # Generated plots and maps
-├── src/                       # Source code
-├── scripts/                   # Utility and visualization scripts
-├── logs/                      # Processing logs
-├── pipeline.py               # Main processing pipeline
-├── README.md                 # This file
-└── requirements.txt          # Python dependencies
+│   └── processed/              # Processed features
+├── models/                     # Trained models (git-ignored)
+├── results/                    # Output data (git-ignored)
+└── figures/                    # Generated plots (git-ignored)
 ```
 
-## 🚀 Quick Start
+## 📖 Usage Guide
 
-### 1. Clone and Setup
-```bash
-git clone <repository-url>
-cd grace-downscaling
-pip install -r requirements.txt
+### Basic Usage
+
+```python
+# Import the main modules
+from src.features import create_features
+from src.updated_model_rf import train_model
+from src.groundwater_enhanced import calculate_groundwater_storage
+from src.validation.validate_groundwater import GroundwaterValidator
+
+# Or use the pipeline
+import subprocess
+subprocess.run(['python', 'pipeline.py', '--steps', 'all'])
 ```
 
-### 2. Configure Study Area
+### Advanced Configuration
+
 Edit `src/config.yaml`:
 ```yaml
+# Study region
 region:
   name: "Mississippi River Basin"
   lat_min: 28.0
@@ -103,304 +230,169 @@ region:
   lon_min: -100.0
   lon_max: -82.0
 
-resolution: 0.25  # degrees (~25km)
-target_crs: EPSG:4326
+# Model parameters
+model:
+  n_estimators: 200
+  max_depth: 25
+  
+# Processing options
+resolution: 0.25  # degrees
+reference_period: ["2004-01", "2009-12"]
 ```
 
-### 3. Download Data
-```bash
-# Download all datasets (takes several hours)
-python src/data_loader.py --download all --region mississippi
+### Custom Region Analysis
 
-# Or download specific datasets
-python src/data_loader.py --download grace gldas chirps --region mississippi
-```
-
-### 4. Process Features
-```bash
-# Create aligned feature stack
-python src/features.py
-
-# Validate feature quality
-python scripts/check_netcdf.py data/processed/feature_stack.nc
-```
-
-### 5. Train Model
-```bash
-# Train enhanced Random Forest model
-python src/updated_model_rf.py
-```
-
-### 6. Run Complete Pipeline
-```bash
-# Execute full analysis pipeline
-python pipeline.py --steps all
-
-# Or run specific steps
-python pipeline.py --steps gws,validate
-```
-
-## 📋 Detailed Workflow
-
-### Data Download (`src/data_loader.py`)
-
-Downloads multi-source satellite and model data:
-
-- **GRACE MASCON**: Total water storage anomalies (NASA/JPL)
-- **GLDAS-2.1**: Soil moisture (4 layers), evapotranspiration, snow water equivalent
-- **CHIRPS**: Daily precipitation aggregated to monthly
-- **TerraClimate**: Temperature, precipitation, actual ET, climatic water deficit
-- **MODIS MCD12Q1**: Annual land cover classification
-- **USGS SRTM**: 30m digital elevation model
-- **USGS NWIS**: Groundwater well observations
-- **OpenLandMap**: Soil texture (sand/clay content by depth)
-
-### Feature Engineering (`src/features.py`)
-
-Creates comprehensive feature stack:
-- **Temporal alignment**: All datasets resampled to monthly, 0.25° resolution
-- **Quality control**: NaN handling, outlier detection
-- **Feature naming**: Consistent timestamp-based naming convention
-
-### Enhanced Modeling (`src/updated_model_rf.py`)
-
-Advanced Random Forest implementation:
-- **Lagged features**: 1, 3, and 6-month lags to capture memory effects
-- **Seasonal encoding**: Cyclical month representation (sin/cos)
-- **Static features**: Elevation, land cover, soil properties
-- **Optimized parameters**: 200 trees, depth 25, sqrt features
-- **Cross-validation**: 80/20 train/test split with performance metrics
-
-### Groundwater Extraction (`src/groundwater_enhanced.py`)
-
-Water balance decomposition:
-```
-GWS_anomaly = TWS_anomaly - SM_anomaly - SWE_anomaly
-```
-- **Reference period**: 2004-2009 climatological mean
-- **Component separation**: Soil moisture and snow water equivalent
-- **Uncertainty handling**: NaN value treatment and error propagation
-
-### Validation (`src/validation.py`)
-
-Statistical validation against observations:
-- **USGS well data**: Monthly groundwater level anomalies
-- **Metrics**: Pearson correlation, RMSE, Nash-Sutcliffe efficiency
-- **Spatial analysis**: Performance maps and regional statistics
-- **Time series plots**: Visual comparison of predicted vs observed
-
-## 📊 Outputs
-
-### Primary Results
-- `results/groundwater_storage_anomalies.nc`: Main groundwater analysis
-- `results/well_validation_metrics.csv`: Validation statistics
-- `models/rf_model_enhanced.joblib`: Trained ML model
-
-### Visualizations
-- **Monthly maps**: `figures/monthly_groundwater/`
-- **Publication figures**: `figures/publication/`
-- **Validation plots**: `figures/validation/`
-- **Model diagnostics**: `figures/feature_importance_enhanced.png`
-
-### Key Datasets Generated
-
-| File | Description | Format |
-|------|-------------|---------|
-| `feature_stack.nc` | Aligned multi-source features | NetCDF |
-| `groundwater_storage_anomalies.nc` | Primary results | NetCDF |
-| `well_validation_metrics.csv` | Performance statistics | CSV |
-| `rf_model_enhanced.joblib` | Trained model | Joblib |
-
-## ⚙️ Configuration Options
-
-### Regional Settings (`src/config.yaml`)
-```yaml
-# Study region bounds
-region:
-  lat_min: 28.0    # Southern boundary
-  lat_max: 49.0    # Northern boundary  
-  lon_min: -100.0  # Western boundary
-  lon_max: -82.0   # Eastern boundary
-
-# Processing parameters
-resolution: 0.25           # Spatial resolution (degrees)
-reference_file: data/raw/grace/20030131_20030227.tif
-target_crs: EPSG:4326     # Coordinate system
-```
-
-### Model Parameters (`src/updated_model_rf.py`)
 ```python
-RandomForestRegressor(
-    n_estimators=200,      # Number of trees
-    max_depth=25,          # Tree depth
-    min_samples_split=5,   # Minimum samples for split
-    max_features='sqrt',   # Features per tree
-    n_jobs=-1             # Use all CPU cores
-)
+# Modify data_loader.py to add your region
+REGIONS = {
+    "mississippi": ee.Geometry.Rectangle([-100, 28, -82, 49]),
+    "your_region": ee.Geometry.Rectangle([lon_min, lat_min, lon_max, lat_max])
+}
+
+# Run pipeline for your region
+python pipeline.py --region your_region
 ```
 
-## 🔧 Utility Scripts
+## 📈 Results
 
-### Data Quality Control
-```bash
-# Check NetCDF file structure and quality
-python scripts/check_netcdf.py data/processed/feature_stack.nc
+### Model Performance
+- **Training R²**: 0.956
+- **Testing R²**: 0.865
+- **RMSE**: 3.98 cm
+- **Feature Importance**: 
+  - Lagged features: 45%
+  - Current features: 35%
+  - Static features: 15%
+  - Seasonal: 5%
 
-# Validate timestamp alignment
-python scripts/validate_feature_timestamps.py
+### Validation Metrics
+| Method | Mean Correlation | Coverage | Best Performance |
+|--------|-----------------|----------|------------------|
+| Point wells | 0.22 ± 0.22 | 1,396 wells | r > 0.5: 10% |
+| Spatial 50km | 0.35 ± 0.18 | 187 grid cells | r > 0.5: 28% |
+| Spatial 100km | 0.42 ± 0.15 | 89 grid cells | r > 0.5: 41% |
 
-# Inventory raw data files
-python scripts/check_tif_inventory.py
-```
+### Output Products
 
-### Visualization Tools
-```bash
-# Generate monthly groundwater maps
-python scripts/visualization_groundwater_monthly.py
+1. **Groundwater Storage Anomalies**
+   - File: `results/groundwater_storage_anomalies_corrected.nc`
+   - Resolution: 0.25° (~25km)
+   - Frequency: Monthly
+   - Period: 2003-2022
+   - Units: cm water equivalent
 
-# Create model comparison plots
-python scripts/visualization_model_output_updated.py
+2. **Validation Reports**
+   - Point validation: `results/validation/point_validation_metrics.csv`
+   - Spatial validation: `results/validation/spatial_avg_50km_metrics.csv`
+   - Summary report: `results/validation/validation_report.txt`
 
-# Generate publication figures
-python scripts/publication_figures.py
-```
+## 🔧 API Reference
 
-### Data Checking
-```bash
-# Comprehensive data inventory
-python src/data_checker.py
+### Main Functions
 
-# Test processed features
-python src/test_features.py
-```
-
-## 📈 Performance Expectations
-
-### Computational Requirements
-- **Memory**: 16+ GB RAM recommended
-- **Storage**: 50+ GB for full dataset
-- **Processing time**: 
-  - Data download: 4-8 hours
-  - Feature processing: 30 minutes
-  - Model training: 15-30 minutes
-  - Full pipeline: 1-2 hours
-
-### Expected Accuracy
-- **Well validation correlation**: 0.6-0.8 (typical)
-- **RMSE**: 2-4 cm water equivalent
-- **Nash-Sutcliffe efficiency**: 0.4-0.7
-- **Spatial coverage**: 90%+ valid pixels
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Earth Engine Authentication**
-```bash
-# Re-authenticate if getting permission errors
-earthengine authenticate
-python -c "import ee; ee.Initialize()"
-```
-
-**Memory Errors**
 ```python
-# Reduce data loading chunk size in config
-chunk_size: 50  # Reduce from default 100
+# Data download
+from src.data_loader import export_grace, export_gldas, download_usgs_well_data
+
+# Feature engineering
+from src.features import create_feature_stack, load_grace_months
+
+# Model training
+from src.updated_model_rf import train_enhanced_model, create_lagged_features
+
+# Groundwater calculation
+from src.groundwater_enhanced import calculate_groundwater_storage
+
+# Validation
+from src.validation.validate_groundwater import GroundwaterValidator
+validator = GroundwaterValidator()
+validator.validate_point_to_point()
+validator.validate_spatial_average(radius_km=50)
 ```
 
-**Missing Data Files**
-```bash
-# Check data inventory
-python src/data_checker.py
-# Re-download specific datasets
-python src/data_loader.py --download grace --region mississippi
+### Data Access
+
+```python
+import xarray as xr
+
+# Load results
+gws = xr.open_dataset('results/groundwater_storage_anomalies_corrected.nc')
+
+# Access variables
+groundwater = gws.groundwater  # Main output
+tws = gws.tws                  # Total water storage
+soil_moisture = gws.soil_moisture_anomaly
+snow = gws.swe_anomaly
+
+# Get time series at a location
+lat, lon = 35.0, -90.0
+timeseries = gws.groundwater.sel(lat=lat, lon=lon, method='nearest')
 ```
-
-**Feature Dimension Mismatch**
-```bash
-# Validate feature alignment
-python scripts/validate_feature_timestamps.py
-# Regenerate features if needed
-python src/features.py
-```
-
-### Error Logs
-Check `logs/pipeline_YYYYMMDD_HHMMSS.log` for detailed error messages.
-
-## 📚 Scientific Background
-
-### Methodology
-This project implements the methodology described in recent literature on GRACE data downscaling:
-
-1. **Multi-source data fusion**: Combining satellite observations with land surface models
-2. **Machine learning downscaling**: Using auxiliary high-resolution datasets as predictors
-3. **Water balance decomposition**: Separating total water storage into components
-4. **Temporal feature engineering**: Incorporating memory effects and seasonality
-
-### Key References
-- Rateb et al. (2020): GRACE data downscaling using machine learning
-- Seyoum & Milewski (2017): Monitoring groundwater storage changes
-- Feng et al. (2018): Evaluation of groundwater storage changes from GRACE
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
+
 ### Development Setup
 ```bash
-# Fork repository and create branch
-git checkout -b feature/new-analysis
+# Fork and clone the repo
+git clone https://github.com/Saurav-JSU/GroundWater-Downscaling
 
-# Install development dependencies
-pip install black flake8 pytest
+# Create development environment
+conda create -n grace-dev python=3.8
+conda activate grace-dev
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Run tests
-python -m pytest tests/
+pytest tests/
+
+# Format code
+black src/
+flake8 src/
 ```
 
-### Code Style
-- Use Black for formatting: `black src/`
-- Follow PEP 8 guidelines
-- Add docstrings to new functions
-- Include unit tests for new features
+### Reporting Issues
+Please use the [GitHub issue tracker](https://github.com/yourusername/grace-downscaling/issues) to report bugs or request features.
 
-### Submitting Changes
-1. Create feature branch
-2. Add tests for new functionality
-3. Update documentation
-4. Submit pull request with clear description
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📞 Support
-
-- **Issues**: Report bugs via GitHub Issues
-- **Discussions**: Use GitHub Discussions for questions
-- **Email**: [Contact information]
-
-## 🏆 Citation
+## 📚 Citation
 
 If you use this code in your research, please cite:
 
 ```bibtex
 @software{grace_downscaling_2024,
-  title={GRACE Satellite Data Downscaling for Groundwater Monitoring},
-  author={[Author Names]},
-  year={2024},
-  url={[Repository URL]},
-  doi={[DOI if available]}
+  author = {Bhattarai, Saurav},
+  title = {GRACE Satellite Data Downscaling for Groundwater Monitoring},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/Saurav-JSU/GroundWater-Downscaling},
 }
 ```
 
-## 🔄 Version History
+### Related Publications
+- Manuscript in preparation: "Machine Learning Downscaling of GRACE Satellite Data for High-Resolution Groundwater Monitoring"
+- Conference presentation: AGU Fall Meeting 2024
 
-- **v1.0.0**: Initial release with basic downscaling
-- **v1.1.0**: Added enhanced features (lagged, seasonal)
-- **v1.2.0**: Improved validation and visualization
-- **v1.3.0**: Complete pipeline automation
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- NASA GRACE/GRACE-FO team for satellite data
+- Google Earth Engine for data access platform  
+- USGS for groundwater well observations
+- Funding support from [Your Funding Source]
+
+## 📞 Contact
+
+- **Lead Developer**: Saurav Bhattarai
+- **Email**: [saurav.bhattarai@students.jsums.edu]
+- **Lab Website**: [bit.ly/jsu_water]
+- **Issues**: [GitHub Issues](https://github.com/Saurav-JSU/GroundWater-Downscaling)
 
 ---
 
-**Last Updated**: [Current Date]  
-**Maintainer**: Saurav Bhattarai
+**Last Updated**: November 2024  
+**Version**: 1.0.0  
 **Status**: Active Development

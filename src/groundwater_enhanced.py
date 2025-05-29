@@ -1,13 +1,21 @@
-# src/groundwater_enhanced.py - Modified for the enhanced model
+# src/groundwater_enhanced.py - FIXED VERSION with unit conversions
+"""
+Enhanced groundwater storage calculation from GRACE TWS and component separation.
+
+This module includes:
+- Proper unit conversions (GLDAS kg/m² to cm)
+- Extreme value capping
+- Enhanced model input preparation with lagged features
+"""
+
 import os
 import numpy as np
 import xarray as xr
 import joblib
 from tqdm import tqdm
-import rioxarray as rxr
-from pathlib import Path
 import pandas as pd
 from datetime import datetime
+
 
 def prepare_model_input(ds, time_index, lag_months=[1, 3, 6]):
     """
@@ -81,6 +89,7 @@ def prepare_model_input(ds, time_index, lag_months=[1, 3, 6]):
         print(f"Error preparing input for {time_index}: {e}")
         return None
 
+
 def calculate_groundwater_storage():
     """Calculate groundwater storage anomalies from TWS and other components using enhanced model"""
     # Create output directory
@@ -99,11 +108,21 @@ def calculate_groundwater_storage():
     # Identify water storage components by name patterns
     soil_vars = [v for v in ds.feature.values if 'SoilMoi' in str(v)]
     swe_vars = [v for v in ds.feature.values if 'SWE' in str(v)]
-    et_vars = [v for v in ds.feature.values if 'Evap' in str(v) or 'aet' in str(v)]
     
     print(f"Identified {len(soil_vars)} soil moisture variables")
     print(f"Identified {len(swe_vars)} snow water equivalent variables")
-    print(f"Identified {len(et_vars)} evapotranspiration variables")
+    
+    # Check GLDAS units by looking at sample values
+    print("\nChecking GLDAS variable ranges (for unit detection):")
+    for var in soil_vars[:2]:  # Check first two soil layers
+        try:
+            var_idx = np.where(ds.feature.values == var)[0][0]
+            sample_values = ds.features.isel(feature=var_idx, time=0).values
+            valid_samples = sample_values[~np.isnan(sample_values)]
+            if len(valid_samples) > 0:
+                print(f"  {var}: range [{valid_samples.min():.2f}, {valid_samples.max():.2f}]")
+        except:
+            pass
     
     # Create arrays to store results
     gws_data = []
@@ -112,58 +131,61 @@ def calculate_groundwater_storage():
     swe_data = []
     times = []
     
-    # 1. First extract all time series data for each component
-    print("Extracting component time series...")
+    # 1. First extract all time series data for each component WITH UNIT CONVERSION
+    print("\nExtracting component time series with unit conversions...")
     time_indices = ds.time.values
     all_soil_moisture = []
     all_swe = []
     valid_times = []
     
+    # UNIT CONVERSION FACTOR
+    # GLDAS is in kg/m^2, convert to cm: 1 kg/m^2 = 0.1 cm
+    GLDAS_TO_CM = 0.1
+    
     for time_index in tqdm(time_indices):
         try:
-            # Extract soil moisture for this time
+            # Extract soil moisture for this time WITH UNIT CONVERSION
             soil_moisture_t = np.zeros((ds.lat.shape[0], ds.lon.shape[0]))
             soil_found = False
+            
             if soil_vars:
                 for var in soil_vars:
                     try:
                         var_idx = np.where(ds.feature.values == var)[0][0]
                         soil_values = ds.sel(time=time_index).features.isel(feature=var_idx).values
                         
-                        # Check for all NaN values
+                        # APPLY UNIT CONVERSION HERE
+                        # Check if values are likely in kg/m^2 (typically > 10)
                         if not np.all(np.isnan(soil_values)):
+                            max_val = np.nanmax(soil_values)
+                            if max_val > 10:  # Likely kg/m^2
+                                soil_values = soil_values * GLDAS_TO_CM
+                            
                             soil_moisture_t += np.nan_to_num(soil_values, nan=0.0)
                             soil_found = True
-                    except (IndexError, ValueError):
-                        try:
-                            soil_values = ds.sel(time=time_index).features.sel(feature=var, method='nearest').values
-                            if not np.all(np.isnan(soil_values)):
-                                soil_moisture_t += np.nan_to_num(soil_values, nan=0.0)
-                                soil_found = True
-                        except Exception as inner_e:
-                            pass  # Continue to next variable
+                    except Exception:
+                        pass
             
-            # Extract snow water equivalent for this time
+            # Extract snow water equivalent WITH UNIT CONVERSION
             swe_t = np.zeros((ds.lat.shape[0], ds.lon.shape[0]))
             swe_found = False
+            
             if swe_vars:
                 for var in swe_vars:
                     try:
                         var_idx = np.where(ds.feature.values == var)[0][0]
                         swe_values = ds.sel(time=time_index).features.isel(feature=var_idx).values
                         
-                        # Check for all NaN values
+                        # APPLY UNIT CONVERSION HERE
                         if not np.all(np.isnan(swe_values)):
+                            max_val = np.nanmax(swe_values)
+                            if max_val > 10:  # Likely kg/m^2
+                                swe_values = swe_values * GLDAS_TO_CM
+                            
                             swe_t += np.nan_to_num(swe_values, nan=0.0)
                             swe_found = True
-                    except (IndexError, ValueError):
-                        try:
-                            swe_values = ds.sel(time=time_index).features.sel(feature=var, method='nearest').values
-                            if not np.all(np.isnan(swe_values)):
-                                swe_t += np.nan_to_num(swe_values, nan=0.0)
-                                swe_found = True
-                        except Exception as inner_e:
-                            pass  # Continue to next variable
+                    except Exception:
+                        pass
             
             # Only store if we found data
             if soil_found or swe_found:
@@ -177,13 +199,11 @@ def calculate_groundwater_storage():
     if not valid_times:
         raise ValueError("No valid data found for any time period")
     
-    # 2. Identify reference period indices
-    # Convert time strings to pandas datetime for easier filtering
+    # 2. Calculate reference period means
+    print("\nCalculating reference period means...")
     time_dates = pd.to_datetime(valid_times)
     ref_start_date = pd.to_datetime(reference_start)
     ref_end_date = pd.to_datetime(reference_end)
-    
-    # Create boolean mask for reference period
     ref_mask = (time_dates >= ref_start_date) & (time_dates <= ref_end_date)
     
     ref_count = np.sum(ref_mask)
@@ -195,55 +215,32 @@ def calculate_groundwater_storage():
     
     print(f"Using {ref_count} months for reference period mean calculation")
     
-    # Debug: print first few reference period dates to verify
-    ref_indices = np.where(ref_mask)[0]
-    if len(ref_indices) > 0:
-        print("First few reference period dates:")
-        for i in range(min(5, len(ref_indices))):
-            print(f"  {valid_times[ref_indices[i]]}")
-    
-    # 3. Calculate reference means for the components
-    # Only use data from reference period (2004-2009)
-    soil_moisture_ref = np.stack([all_soil_moisture[i] for i, is_ref in enumerate(ref_mask) if is_ref])
-    swe_ref = np.stack([all_swe[i] for i, is_ref in enumerate(ref_mask) if is_ref])
-    
-    # Check for NaN values
-    soil_nan_count = np.isnan(soil_moisture_ref).sum()
-    soil_total_elements = soil_moisture_ref.size
-    swe_nan_count = np.isnan(swe_ref).sum()
-    swe_total_elements = swe_ref.size
-    
-    print(f"Soil moisture reference data shape: {soil_moisture_ref.shape}")
-    print(f"Soil moisture NaN values: {soil_nan_count} out of {soil_total_elements} elements ({soil_nan_count/soil_total_elements*100:.2f}%)")
-    
-    print(f"SWE reference data shape: {swe_ref.shape}")
-    print(f"SWE NaN values: {swe_nan_count} out of {swe_total_elements} elements ({swe_nan_count/swe_total_elements*100:.2f}%)")
-    
-    # Calculate means over reference period, handling NaNs explicitly
-    if soil_moisture_ref.size > 0 and not np.all(np.isnan(soil_moisture_ref)):
-        # Replace NaNs with zeros for calculation
-        soil_moisture_clean = np.nan_to_num(soil_moisture_ref, nan=0.0)
-        soil_moisture_mean = np.mean(soil_moisture_clean, axis=0)
-        print("Soil moisture mean calculation successful")
+    # Calculate reference means
+    if ref_count > 0:
+        soil_moisture_ref = np.stack([all_soil_moisture[i] for i, is_ref in enumerate(ref_mask) if is_ref])
+        swe_ref = np.stack([all_swe[i] for i, is_ref in enumerate(ref_mask) if is_ref])
+        
+        soil_moisture_mean = np.nanmean(soil_moisture_ref, axis=0)
+        swe_mean = np.nanmean(swe_ref, axis=0)
+        
+        # Replace any remaining NaNs with zeros
+        soil_moisture_mean = np.nan_to_num(soil_moisture_mean, nan=0.0)
+        swe_mean = np.nan_to_num(swe_mean, nan=0.0)
     else:
-        print("⚠️ Warning: No valid soil moisture data in reference period, using zeros")
         soil_moisture_mean = np.zeros((ds.lat.shape[0], ds.lon.shape[0]))
-    
-    if swe_ref.size > 0 and not np.all(np.isnan(swe_ref)):
-        # Replace NaNs with zeros for calculation
-        swe_clean = np.nan_to_num(swe_ref, nan=0.0)
-        swe_mean = np.mean(swe_clean, axis=0)
-        print("SWE mean calculation successful")
-    else:
-        print("⚠️ Warning: No valid SWE data in reference period, using zeros")
         swe_mean = np.zeros((ds.lat.shape[0], ds.lon.shape[0]))
     
-    print(f"Calculated component means over reference period {reference_start} to {reference_end}")
+    print(f"Component magnitudes in reference period:")
+    print(f"  Soil moisture mean: {np.mean(soil_moisture_mean):.2f} cm")
+    print(f"  SWE mean: {np.mean(swe_mean):.2f} cm")
     
-    # 4. Now process each time step to calculate groundwater anomalies
-    print("Calculating groundwater storage anomalies...")
+    # 3. Process each time step to calculate groundwater anomalies
+    print("\nCalculating groundwater storage anomalies...")
     
-    # Process only valid times
+    # Define reasonable bounds for capping
+    MAX_REASONABLE_TWS = 150  # cm
+    MAX_REASONABLE_COMPONENT = 50  # cm
+    
     for i, time_index in enumerate(tqdm(valid_times)):
         try:
             # Prepare enhanced model input for TWS prediction
@@ -267,17 +264,26 @@ def calculate_groundwater_storage():
             n_lon = ds.lon.shape[0]
             tws_spatial = tws_pred.reshape(n_lat, n_lon)
             
+            # CAP TWS PREDICTIONS
+            tws_spatial = np.clip(tws_spatial, -MAX_REASONABLE_TWS, MAX_REASONABLE_TWS)
+            
             # Get the soil moisture and SWE for this time step
             soil_moisture = all_soil_moisture[i]
             swe = all_swe[i]
             
-            # Convert to anomalies relative to 2004-2009 reference period
+            # Convert to anomalies relative to reference period
             soil_moisture_anomaly = soil_moisture - soil_moisture_mean
             swe_anomaly = swe - swe_mean
             
+            # CAP COMPONENT ANOMALIES
+            soil_moisture_anomaly = np.clip(soil_moisture_anomaly, -MAX_REASONABLE_COMPONENT, MAX_REASONABLE_COMPONENT)
+            swe_anomaly = np.clip(swe_anomaly, -MAX_REASONABLE_COMPONENT, MAX_REASONABLE_COMPONENT)
+            
             # Calculate groundwater anomaly: GWS_anomaly = TWS_anomaly - SM_anomaly - SWE_anomaly
-            # TWS from model is already an anomaly relative to the same period
             gws = tws_spatial - soil_moisture_anomaly - swe_anomaly
+            
+            # FINAL CAP ON GROUNDWATER
+            gws = np.clip(gws, -MAX_REASONABLE_TWS, MAX_REASONABLE_TWS)
             
             # Store results
             gws_data.append(gws)
@@ -308,17 +314,18 @@ def calculate_groundwater_storage():
         attrs={
             "reference_period": f"{reference_start} to {reference_end}",
             "description": f"Water storage anomalies relative to {reference_start}-{reference_end} mean",
-            "processing_notes": "Enhanced model with lagged and seasonal features",
-            "model_info": "Random Forest with lagged features and seasonal encoding"
+            "processing_notes": "Enhanced model with lagged features, unit-corrected (GLDAS kg/m² to cm), capped at ±150cm",
+            "model_info": "Random Forest with lagged features and seasonal encoding",
+            "units": "cm water equivalent"
         }
     )
     
     # Add metadata
-    gws_ds.groundwater.attrs["long_name"] = "Groundwater Storage Anomaly (Enhanced Model)"
+    gws_ds.groundwater.attrs["long_name"] = "Groundwater Storage Anomaly"
     gws_ds.groundwater.attrs["units"] = "cm water equivalent"
     gws_ds.groundwater.attrs["reference_period"] = f"{reference_start} to {reference_end}"
     
-    gws_ds.tws.attrs["long_name"] = "Total Water Storage Anomaly (Enhanced Model)"
+    gws_ds.tws.attrs["long_name"] = "Total Water Storage Anomaly"
     gws_ds.tws.attrs["units"] = "cm water equivalent"
     gws_ds.tws.attrs["reference_period"] = f"{reference_start} to {reference_end}"
     
@@ -330,13 +337,22 @@ def calculate_groundwater_storage():
     gws_ds.swe_anomaly.attrs["units"] = "cm water equivalent"
     gws_ds.swe_anomaly.attrs["reference_period"] = f"{reference_start} to {reference_end}"
     
-    # Save results
-    output_path = "results/groundwater_storage_anomalies_enhanced.nc"
+    # Print final statistics
+    print("\nFinal statistics:")
+    for var in ['groundwater', 'tws', 'soil_moisture_anomaly', 'swe_anomaly']:
+        data = gws_ds[var].values
+        valid = data[~np.isnan(data)]
+        print(f"  {var}: [{valid.min():.2f}, {valid.max():.2f}] cm, "
+              f"mean={valid.mean():.2f}, std={valid.std():.2f}")
+    
+    # Save results - use standard filename for compatibility
+    output_path = "results/groundwater_storage_anomalies.nc"
     gws_ds.to_netcdf(output_path)
-    print(f"✅ Enhanced groundwater storage anomalies saved to {output_path}")
+    print(f"\n✅ Groundwater storage anomalies saved to {output_path}")
     print(f"   All anomalies are relative to the {reference_start} to {reference_end} reference period")
     
     return gws_ds
+
 
 if __name__ == "__main__":
     calculate_groundwater_storage()

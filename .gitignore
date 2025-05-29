@@ -1,80 +1,79 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# VS Code settings
-.vscode/
-
-# Environment files
-.env
-.venv/
+*.so
+.Python
 env/
 venv/
-*.env
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
 
-# macOS and system files
-.DS_Store
-Thumbs.db
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
-# Log files
+# Data files (too large for git)
+data/raw/
+data/processed/
+replacements/
+*.nc
+*.tif
+*.geotiff
+*.hdf
+*.hdf5
+*.h5
+
+# Model files
+models/
+*.joblib
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.pth
+
+# Results (generate locally)
+results/
+figures/
+*.png
+*.jpg
+*.pdf
+*.svg
+
+# Logs
+logs/
 *.log
 
-# Python packaging
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pytest
-.pytest_cache/
-
-# Coverage reports
-htmlcov/
-.coverage
-coverage.xml
-*.cover
-*.py,cover
-
-# Earth Engine token
-.credentials
-
-# Data and results
-data/
-results/
-*.tif
-*.nc
-*.hdf
-*.csv
-*.xlsx
+# OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 
 # Temporary files
-*.bak
 *.tmp
+*.temp
 *.swp
+*.swo
+*~
 
-# Output folders
-outputs/
-figures/
-plots/
-models/
-logs/
-visualizations/
+# Configuration with credentials
+config_local.yaml
+.env
+
+# Earth Engine
+.ee_token
+credentials.json
+
+# Keep directory structure
+!data/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!models/.gitkeep
+!results/.gitkeep
+!figures/.gitkeep
+!logs/.gitkeep
