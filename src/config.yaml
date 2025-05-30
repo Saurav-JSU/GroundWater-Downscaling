@@ -40,3 +40,73 @@ input_dirs:
 
 # Output file for processed feature stack
 output_path: data/processed/feature_stack.nc
+
+# ========== NEW: MODEL CONFIGURATION ==========
+models:
+  # Which models to train (available: rf, xgb, lgb, catb, nn, svr, gbr)
+  enabled:
+    - rf          # Random Forest (your current baseline)
+    - xgb         # XGBoost (excellent for tabular data)
+    - lgb         # LightGBM (fast and memory efficient)
+    - catb        # CatBoost (handles categorical well)
+    - nn          # Neural Network
+    - gbr         # Gradient Boosting
+    # - svr       # Support Vector Regression (slower for large data)
+  
+  # Model training settings
+  test_size: 0.2              # Fraction of data for testing
+  cross_validation: true      # Enable 5-fold cross-validation
+  ensemble: true              # Create ensemble of all models
+  
+  # Model selection strategy
+  selection_metric: "test_r2" # Metric to use for best model selection (test_r2, test_rmse, cv_r2_mean)
+  
+  # Optional: Custom hyperparameters (override defaults)
+  hyperparameters:
+    rf:
+      n_estimators: 300       # Increase trees for better performance
+      max_depth: 30           # Allow deeper trees
+      min_samples_split: 3    # More aggressive splitting
+    
+    xgb:
+      n_estimators: 250
+      max_depth: 10
+      learning_rate: 0.08
+      subsample: 0.85
+    
+    lgb:
+      n_estimators: 250
+      max_depth: 10
+      learning_rate: 0.08
+      subsample: 0.85
+    
+    nn:
+      hidden_layer_sizes: [512, 256, 128, 64]  # Larger network
+      max_iter: 1000
+      early_stopping: true
+  
+  # Advanced settings
+  advanced:
+    # Hyperparameter tuning (if you want to add this later)
+    enable_tuning: false
+    tuning_trials: 50
+    
+    # Feature selection
+    feature_selection: false
+    max_features: null
+    
+    # Model interpretability
+    save_feature_importance: true
+    save_predictions: true
+
+# ========== PIPELINE SETTINGS ==========
+pipeline:
+  # Which model to use for groundwater calculation
+  # Options: "best", "ensemble", or specific model name (rf, xgb, etc.)
+  groundwater_model: "best"   # Use the best performing model
+  
+  # Alternative models to try if primary fails
+  fallback_models: ["rf", "xgb", "ensemble"]
+  
+  # Skip model training if models already exist
+  skip_training_if_exists: false

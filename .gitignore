@@ -29,6 +29,7 @@ replacements/
 
 # Model files
 models/
+models_1/
 *.joblib
 *.pkl
 *.pickle
@@ -39,6 +40,8 @@ models/
 # Results (generate locally)
 results/
 figures/
+results_1/
+figures_1/
 *.png
 *.jpg
 *.pdf
@@ -77,3 +80,6 @@ credentials.json
 !results/.gitkeep
 !figures/.gitkeep
 !logs/.gitkeep
+
+#Catboost info
+catboost_info/

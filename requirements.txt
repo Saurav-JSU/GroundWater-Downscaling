@@ -40,9 +40,31 @@ joblib>=1.0.0
 tqdm>=4.62.0
 python-dateutil>=2.8.0
 
-# Development (optional)
+# ========== NEW: MULTI-MODEL MACHINE LEARNING ==========
+
+# Advanced gradient boosting (highly recommended)
+xgboost>=1.6.0          # Excellent for tabular data
+lightgbm>=3.3.0         # Fast and memory efficient  
+catboost>=1.0.0         # Handles categorical features well
+
+# Optional: Advanced ML and interpretability
+optuna>=3.0.0           # Hyperparameter optimization (optional)
+shap>=0.41.0            # Model interpretability (optional)
+
+# ========== DEVELOPMENT (OPTIONAL) ==========
 pytest>=6.2.0
 black>=21.7b0
 flake8>=3.9.0
 jupyter>=1.0.0
 ipykernel>=6.0.0
+
+# Note: If you get installation issues with the advanced ML libraries:
+# 1. XGBoost: May need specific versions for your OS
+# 2. LightGBM: May need cmake on some systems
+# 3. CatBoost: Generally installs smoothly
+# 
+# Minimal installation (core functionality only):
+# pip install -r requirements.txt --ignore-installed xgboost lightgbm catboost
+#
+# Full installation with all enhancements:
+# pip install -r requirements.txt
