@@ -32,6 +32,38 @@ Available models:
     - gbr: Gradient Boosting
     - ensemble: Ensemble of multiple models
 """
+#!/usr/bin/env python3
+import os
+import multiprocessing
+
+# Get system limits
+cpu_count = multiprocessing.cpu_count()
+desired_cores = max(1, cpu_count // 2)  # 50% = 96 cores
+
+# Check for existing NUMEXPR limit
+numexpr_limit = int(os.environ.get('NUMEXPR_MAX_THREADS', desired_cores))
+
+# Use the minimum of desired and system-allowed
+MAX_CORES = min(desired_cores, numexpr_limit)
+
+print(f"🔧 CPU cores available: {cpu_count}")
+print(f"🔧 Desired cores (50%): {desired_cores}")
+print(f"🔧 NumExpr limit: {numexpr_limit}")
+print(f"🔧 Final limit: {MAX_CORES} cores")
+
+# Set environment variables to the safe limit
+os.environ['OMP_NUM_THREADS'] = str(MAX_CORES)
+os.environ['OPENBLAS_NUM_THREADS'] = str(MAX_CORES)
+os.environ['MKL_NUM_THREADS'] = str(MAX_CORES)
+os.environ['VECLIB_MAXIMUM_THREADS'] = str(MAX_CORES)
+os.environ['NUMEXPR_NUM_THREADS'] = str(MAX_CORES)
+
+# Don't exceed NumExpr's hard limit
+if MAX_CORES > numexpr_limit:
+    MAX_CORES = numexpr_limit
+    print(f"⚠️  Reduced to NumExpr limit: {MAX_CORES} cores")
+
+print(f"✅ Resource limits set: Using {MAX_CORES} cores")
 
 import argparse
 import logging

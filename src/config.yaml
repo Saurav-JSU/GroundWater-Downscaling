@@ -3,16 +3,16 @@ rf_model_path: models/rf_model.pkl
 
 region:
   name: "Mississippi River Basin"
-  lat_min: 28.0
-  lat_max: 49.0
-  lon_min: -100.0
-  lon_max: -82.0
+  lat_min: 29.0
+  lat_max: 49.3
+  lon_min: -112.5
+  lon_max: -81.0
 
 # Use one of the actual GRACE files. Update this with an actual filename you see under data/raw/grace/
 reference_file: data/raw/grace/20030131_20030227.tif
 
 # Target resolution and CRS for all rasters
-resolution: 0.25
+resolution: 0.1
 bbox:
   left: -100.05
   right: -81.63
@@ -44,13 +44,12 @@ output_path: data/processed/feature_stack.nc
 # ========== NEW: MODEL CONFIGURATION ==========
 models:
   # Which models to train (available: rf, xgb, lgb, catb, nn, svr, gbr)
+  # Based on performance results: NN (R²=0.8818), RF (R²=0.8664), XGBoost (R²=0.8182)
   enabled:
-    - rf          # Random Forest (your current baseline)
-    - xgb         # XGBoost (excellent for tabular data)
-    - lgb         # LightGBM (fast and memory efficient)
-    - catb        # CatBoost (handles categorical well)
-    - nn          # Neural Network
-    - gbr         # Gradient Boosting
+    - rf          # Neural Network (BEST: R²=0.8818, RMSE=3.7252)
+    - nn          # Random Forest (2nd: R²=0.8664, RMSE=3.9609)
+    - xgb         # XGBoost (3rd: R²=0.8182, RMSE=4.6200)
+    #- gbr         # Gradient Boosting
     # - svr       # Support Vector Regression (slower for large data)
   
   # Model training settings
@@ -64,9 +63,9 @@ models:
   # Optional: Custom hyperparameters (override defaults)
   hyperparameters:
     rf:
-      n_estimators: 300       # Increase trees for better performance
-      max_depth: 30           # Allow deeper trees
-      min_samples_split: 3    # More aggressive splitting
+      n_estimators: 150       # Increase trees for better performance
+      max_depth: 15           # Allow deeper trees
+      min_samples_split: 4    # More aggressive splitting
     
     xgb:
       n_estimators: 250

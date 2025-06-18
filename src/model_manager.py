@@ -181,19 +181,24 @@ class ModelManager:
             self.config = default_config
     
     def _initialize_models(self):
-        """Initialize all available models with optimized parameters."""
+        """Initialize all available models with limited parallelization."""
+        
+        # Calculate 50% of available cores
+        import multiprocessing
+        max_cores = max(1, multiprocessing.cpu_count() // 2)  # 50% of cores
+        print(f"🔧 Limiting parallelization to {max_cores} cores (50% of available)")
         
         self.model_configs = {
             'rf': {
                 'name': 'Random Forest',
                 'model': RandomForestRegressor(
-                    n_estimators=200,
-                    max_depth=25,
-                    min_samples_split=5,
-                    min_samples_leaf=2,
+                    n_estimators=100,
+                    max_depth=15,
+                    min_samples_split=10,
+                    min_samples_leaf=3,
                     max_features='sqrt',
-                    n_jobs=-1,
-                    random_state=42
+                    n_jobs=max_cores//2,  # ✅ LIMITED instead of -1
+                    random_state=42,
                 ),
                 'needs_scaling': False
             },
@@ -205,6 +210,7 @@ class ModelManager:
                     learning_rate=0.1,
                     subsample=0.8,
                     random_state=42
+                    # Note: GBR doesn't have n_jobs parameter
                 ),
                 'needs_scaling': False
             },
@@ -219,6 +225,7 @@ class ModelManager:
                     early_stopping=True,
                     validation_fraction=0.1,
                     random_state=42
+                    # Note: MLPRegressor doesn't have n_jobs parameter
                 ),
                 'needs_scaling': True
             },
@@ -229,6 +236,7 @@ class ModelManager:
                     C=1.0,
                     gamma='scale',
                     epsilon=0.1
+                    # Note: SVR doesn't have n_jobs parameter
                 ),
                 'needs_scaling': True
             }
@@ -245,7 +253,8 @@ class ModelManager:
                     subsample=0.8,
                     colsample_bytree=0.8,
                     random_state=42,
-                    n_jobs=-1
+                    n_jobs=max_cores,  # ✅ LIMITED instead of -1
+                    nthread=max_cores   # ✅ XGBoost specific parameter
                 ),
                 'needs_scaling': False
             }
@@ -260,7 +269,8 @@ class ModelManager:
                     subsample=0.8,
                     colsample_bytree=0.8,
                     random_state=42,
-                    n_jobs=-1,
+                    n_jobs=max_cores,    # ✅ LIMITED instead of -1
+                    num_threads=max_cores, # ✅ LightGBM specific parameter
                     verbose=-1
                 ),
                 'needs_scaling': False
@@ -274,6 +284,7 @@ class ModelManager:
                     depth=8,
                     learning_rate=0.1,
                     random_state=42,
+                    thread_count=max_cores,  # ✅ CatBoost specific parameter
                     verbose=False
                 ),
                 'needs_scaling': False
@@ -297,6 +308,23 @@ class ModelManager:
         feature_data = ds.features.values
         feature_times = ds.time.values
         
+        # **FIXED: Create proper reference raster with spatial dimensions**
+        print("   Creating reference raster from feature dataset...")
+        sample_feature = ds.features.isel(time=0, feature=0)
+        
+        # Create proper reference raster with x,y dimensions and CRS
+        reference_raster = sample_feature.rename({'lon': 'x', 'lat': 'y'})
+        
+        # Set CRS if not already set
+        if not hasattr(reference_raster, 'rio') or reference_raster.rio.crs is None:
+            reference_raster = reference_raster.rio.write_crs('EPSG:4326')
+        
+        # Set spatial dimensions explicitly
+        reference_raster = reference_raster.rio.set_spatial_dims(x_dim='x', y_dim='y')
+        
+        print(f"   Reference raster shape: {reference_raster.shape}")
+        print(f"   Reference raster CRS: {reference_raster.rio.crs}")
+        
         # Convert time values to strings with robust handling
         print("   Converting time indices...")
         feature_dates = []
@@ -316,10 +344,15 @@ class ModelManager:
             static_data = ds.static_features.values
             print(f"   Loaded {static_data.shape[0]} static features")
         
-        # Load GRACE data
+        # Load GRACE data at same resolution as features
         print("   Loading GRACE data...")
-        grace_data, grace_dates = self._load_grace_tws(grace_dir)
+        grace_data, grace_dates = self._load_grace_tws(grace_dir, reference_raster)
         print(f"   Loaded {len(grace_dates)} GRACE time points")
+        
+        if len(grace_dates) == 0:
+            raise ValueError("No GRACE files could be loaded! Check GRACE data directory and file formats.")
+        
+        print(f"   GRACE data shape: {grace_data.shape}")
         
         # Find common dates
         print("   Finding common dates...")
@@ -349,6 +382,13 @@ class ModelManager:
         
         print(f"   X_temporal shape: {X_temporal.shape}")
         print(f"   grace_tws shape: {grace_tws.shape}")
+        
+        # Verify shapes match now
+        if X_temporal.shape[0] != grace_tws.shape[0]:
+            raise ValueError(f"Time dimension mismatch: features={X_temporal.shape[0]}, grace={grace_tws.shape[0]}")
+        
+        if X_temporal.shape[2:] != grace_tws.shape[1:]:
+            raise ValueError(f"Spatial dimension mismatch: features={X_temporal.shape[2:]}, grace={grace_tws.shape[1:]}")
         
         # Create enhanced features
         print("   Creating lagged features...")
@@ -408,7 +448,7 @@ class ModelManager:
             'common_dates': common_dates
         }
     
-    def _load_grace_tws(self, grace_dir):
+    def _load_grace_tws(self, grace_dir, reference_raster=None):
         """Load GRACE TWS data with robust string handling."""
         import re
         from datetime import datetime
@@ -422,6 +462,7 @@ class ModelManager:
         # Import here to avoid issues if rioxarray not available
         try:
             import rioxarray as rxr
+            import rasterio.enums
         except ImportError:
             raise ImportError("rioxarray is required for GRACE data loading")
         
@@ -441,6 +482,13 @@ class ModelManager:
                     
                     grace_path = os.path.join(grace_dir, filename_str)
                     grace_raster = rxr.open_rasterio(grace_path, masked=True).squeeze()
+                    
+                    # **NEW: Resample GRACE to match reference resolution**
+                    if reference_raster is not None:
+                        grace_raster = grace_raster.rio.reproject_match(
+                            reference_raster,
+                            resampling=rasterio.enums.Resampling.bilinear
+                        )
                     
                     grace_data.append(grace_raster.values)
                     grace_dates.append(grace_date)

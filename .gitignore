@@ -19,6 +19,7 @@ build/
 # Data files (too large for git)
 data/raw/
 data/processed/
+data_old_bounds/
 replacements/
 *.nc
 *.tif
@@ -30,6 +31,8 @@ replacements/
 # Model files
 models/
 models_1/
+models_old_bounds/
+models_1_old_bounds/
 *.joblib
 *.pkl
 *.pickle
@@ -42,6 +45,10 @@ results/
 figures/
 results_1/
 figures_1/
+results_old_bounds/
+results_1_old_bounds/
+figures_old_bounds/
+figures_1_old_bounds/
 *.png
 *.jpg
 *.pdf
@@ -49,6 +56,7 @@ figures_1/
 
 # Logs
 logs/
+logs_old_bounds/
 *.log
 
 # OS
@@ -83,3 +91,4 @@ credentials.json
 
 #Catboost info
 catboost_info/
+catboost_info_old_bounds/

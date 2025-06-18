@@ -1,21 +1,28 @@
 import os
 import numpy as np
-import rioxarray as rxr
+import rioxarray
 import xarray as xr
 from tqdm import tqdm
 from src.utils import parse_grace_months
+import rasterio.enums  # For resampling methods
 
 
 def get_valid_grace_months(grace_dir):
     return parse_grace_months(grace_dir)
 
+def get_chirps_reference_raster(chirps_dir):
+    """Use CHIRPS as reference instead of GRACE"""
+    chirps_files = sorted(os.listdir(chirps_dir))
+    chirps_path = os.path.join(chirps_dir, chirps_files[0])
+    reference_raster = rioxarray.open_rasterio(chirps_path, masked=True).squeeze()  # 5km
+    return reference_raster
 
 def get_grace_reference_raster(grace_dir, valid_months):
     grace_files = sorted(os.listdir(grace_dir))
     if len(grace_files) == 0:
         raise ValueError(f"No GRACE files found in {grace_dir}")
     grace_path = os.path.join(grace_dir, grace_files[0])
-    reference_raster = rxr.open_rasterio(grace_path, masked=True).squeeze()
+    reference_raster = rioxarray.open_rasterio(grace_path, masked=True).squeeze()
     print(f"✅ Using GRACE reference shape: {reference_raster.shape}")
     return reference_raster
 
@@ -31,7 +38,7 @@ def load_feature_array(folder_path, months, suffix=".tif", filename_style="numer
             fname = f"{idx}{suffix}"
             fpath = os.path.join(folder_path, fname)
             if os.path.exists(fpath):
-                raster = rxr.open_rasterio(fpath, masked=True).squeeze()
+                raster = rioxarray.open_rasterio(fpath, masked=True).squeeze()
                 if reference_raster is not None:
                     raster = raster.rio.reproject_match(reference_raster)
                 arr_list.append(raster.values)
@@ -43,7 +50,7 @@ def load_feature_array(folder_path, months, suffix=".tif", filename_style="numer
             fname = f"{m.replace('-', '')}{suffix}"
             fpath = os.path.join(folder_path, fname)
             if os.path.exists(fpath):
-                raster = rxr.open_rasterio(fpath, masked=True).squeeze()
+                raster = rioxarray.open_rasterio(fpath, masked=True).squeeze()
                 if reference_raster is not None:
                     raster = raster.rio.reproject_match(reference_raster)
                 arr_list.append(raster.values)
@@ -66,9 +73,16 @@ def load_static_features(static_dirs, reference_raster):
 
     for name, path in static_dirs.items():
         try:
-            raster = rxr.open_rasterio(path, masked=True).squeeze()
+            raster = rioxarray.open_rasterio(path, masked=True).squeeze()
             if reference_raster is not None:
-                raster = raster.rio.reproject_match(reference_raster)
+                # Use sum-based resampling for population data
+                if "landscan" in name.lower():
+                    raster = raster.rio.reproject_match(
+                        reference_raster,
+                        resampling=rasterio.enums.Resampling.sum
+                    )
+                else:
+                    raster = raster.rio.reproject_match(reference_raster)
             static_arrays.append(raster.values)
             static_names.append(name)
         except Exception as e:
@@ -86,7 +100,8 @@ def main():
     valid_months = get_valid_grace_months(grace_dir)
     print(f"✅ Using {len(valid_months)} months aligned with GRACE")
 
-    reference_raster = get_grace_reference_raster(grace_dir, valid_months)
+    reference_raster = get_chirps_reference_raster("data/raw/chirps")
+    # reference_raster = get_grace_reference_raster(grace_dir, valid_months)
 
     base_dir = "data/raw"
     datasets = {
@@ -114,7 +129,9 @@ def main():
                     arr, _ = load_feature_array(folder, valid_months, filename_style="numeric", reference_raster=reference_raster)
                 elif group == "terraclimate":
                     arr, _ = load_feature_array(folder, valid_months, filename_style="yyyymm", reference_raster=reference_raster)
+                # Note: Static features (modis_land_cover, usgs_dem, landscan, openlandmap) will be handled separately
                 else:
+                    print(f"ℹ️ Skipping {group}/{name} - will process as static feature if available")
                     continue
                 feature_arrays.append(arr)
                 aligned_datasets.append(name if name else group)
@@ -141,6 +158,7 @@ def main():
     static_files = {
         "modis_land_cover": os.path.join(base_dir, "modis_land_cover", "2003_01_01.tif"),
         "usgs_dem": os.path.join(base_dir, "usgs_dem", "srtm_dem.tif"),
+        "landscan_population": os.path.join(base_dir, "landscan", "2003.tif"),  # Using 2003 as reference year
     }
     for depth in ["0cm", "10cm", "30cm", "60cm", "100cm", "200cm"]:
         for var in ["sand", "clay"]:

@@ -15,16 +15,16 @@ except Exception as e:
 
 # Study region: Mississippi River Basin (example bounding box)
 REGIONS = {
-    "mississippi": ee.Geometry.Rectangle([-100.0, 28.0, -82.0, 49.0])
+    "mississippi": ee.Geometry.Rectangle([-112.5, 29.0, -81.0, 49.3])
 }
 
 # Output directories
 RAW_DIR = "data/raw"
-ALL_DATASETS = ["grace", "gldas", "chirps", "modis", "terraclimate", "dem", "usgs", "openlandmap"]
+ALL_DATASETS = ["grace", "gldas", "chirps", "modis", "terraclimate", "dem", "usgs", "openlandmap", "landscan"]
 
 def ensure_dirs():
     os.makedirs(RAW_DIR, exist_ok=True)
-    for sub in ["grace", "gldas", "chirps", "modis_land_cover", "terraclimate", "usgs_dem", "usgs_well_data", "openlandmap"]:
+    for sub in ["grace", "gldas", "chirps", "modis_land_cover", "terraclimate", "usgs_dem", "usgs_well_data", "openlandmap", "landscan"]:
         os.makedirs(os.path.join(RAW_DIR, sub), exist_ok=True)
 
 def export_grace(region):
@@ -156,7 +156,9 @@ def download_usgs_well_data():
     REFERENCE_START = "2004-01"
     REFERENCE_END = "2009-12"
     
-    states = ['MS', 'AR', 'LA', 'TN', 'MO', 'KY', 'IL', 'IN', 'OH', 'AL']
+    states = ['MS', 'AR', 'LA', 'TN', 'MO', 'KY', 'IL', 'IN', 'OH', 'AL', 
+              'WV', 'PA', 'MN', 'WI', 'IA', 'ND', 'SD', 'NE', 'KS', 'OK', 
+              'TX', 'NM', 'CO', 'WY', 'MT']
     all_data = []
     well_metadata = []
     
@@ -428,6 +430,37 @@ def export_openlandmap_soil(region):
             except Exception as e:
                 print(f"Failed to export {prop} at {depth_label}: {e}")
 
+def export_landscan(region):
+    """Export LandScan Global Population Dataset for the study region"""
+    print("Exporting LandScan Global Population Dataset...")
+    
+    # Get the collection and filter to our study period
+    collection = ee.ImageCollection("projects/sat-io/open-datasets/ORNL/LANDSCAN_GLOBAL") \
+        .filterDate("2003-01-01", "2022-12-31") \
+        .filterBounds(region) \
+        .select("b1")
+    
+    # Export each year's data
+    for year in range(2003, 2023):
+        print(f"Processing year {year}...")
+        try:
+            # Get image for this year
+            img = collection.filter(ee.Filter.calendarRange(year, year, 'year')).first()
+            
+            # Export the image
+            filename = f"{year}.tif"
+            geemap.ee_export_image(
+                img,
+                filename=os.path.join(RAW_DIR, "landscan", filename),
+                scale=1000,  # 1km resolution as specified
+                region=region
+            )
+            print(f"✅ Exported {filename}")
+        except Exception as e:
+            print(f"❌ Failed to export {year}: {e}")
+    
+    print("✅ LandScan export complete")
+
 def main():
     parser = argparse.ArgumentParser(description="Download datasets for GRACE downscaling")
     parser.add_argument("--download", nargs="+", choices=ALL_DATASETS + ["all"], required=True, help="Datasets to download")
@@ -458,6 +491,8 @@ def main():
         download_usgs_well_data()
     if "openlandmap" in datasets_to_download:
         export_openlandmap_soil(region)
+    if "landscan" in datasets_to_download:
+        export_landscan(region)
 
 if __name__ == "__main__":
     main()
