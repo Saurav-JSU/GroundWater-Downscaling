@@ -9,6 +9,7 @@ dependencies:
   - numpy
   - xarray
   - rioxarray
+  - regionmask
   - rasterio
   - scikit-learn
   - matplotlib

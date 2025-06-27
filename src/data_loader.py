@@ -15,7 +15,7 @@ except Exception as e:
 
 # Study region: Mississippi River Basin (example bounding box)
 REGIONS = {
-    "mississippi": ee.Geometry.Rectangle([-112.5, 29.0, -81.0, 49.3])
+    "mississippi": ee.Geometry.Rectangle([-113.94, 28.84, -77.84, 49.74])
 }
 
 # Output directories

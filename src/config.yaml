@@ -3,10 +3,10 @@ rf_model_path: models/rf_model.pkl
 
 region:
   name: "Mississippi River Basin"
-  lat_min: 29.0
-  lat_max: 49.3
-  lon_min: -112.5
-  lon_max: -81.0
+  lat_min: 28.84
+  lat_max: 49.74
+  lon_min: -113.94
+  lon_max: -77.84
 
 # Use one of the actual GRACE files. Update this with an actual filename you see under data/raw/grace/
 reference_file: data/raw/grace/20030131_20030227.tif

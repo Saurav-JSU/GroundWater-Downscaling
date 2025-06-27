@@ -53,6 +53,7 @@ figures_1_old_bounds/
 *.jpg
 *.pdf
 *.svg
+shapefiles/
 
 # Logs
 logs/
